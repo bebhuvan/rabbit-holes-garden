@@ -1,0 +1,213 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout 
+    title="About" 
+    description="Learn about Rabbit Holes - a curated collection of beautiful, thought-provoking discoveries from across the internet."
+  >
+  <div class="container">
+    <Header />
+    
+    <main>
+      <div class="about-content">
+        <h2>About Rabbit Holes</h2>
+        
+        <div class="about-text">
+          <p>Rabbit Holes is a curated collection of beautiful, thought-provoking discoveries from across the internet. Like Alice tumbling down the rabbit hole, we find ourselves drawn into fascinating worlds of knowledge, art, science, and human creativity.</p>
+
+          <p>Each post is carefully selected for its ability to spark curiosity, offer new perspectives, or simply reveal the extraordinary in the everyday. Whether it's a stunning data visualization, a profound piece of writing, or an unexpected connection between ideas, we share things that make us pause and wonder.</p>
+
+          <p>This is a space for slow discovery—the opposite of endless scrolling. Every link, every story, every image is chosen because it deserves your attention and time.</p>
+        </div>
+
+        <div class="about-features">
+          <h3>What You'll Find Here</h3>
+          <ul>
+            <li><strong>Curated Content</strong> — Thoughtfully selected discoveries from across the web</li>
+            <li><strong>AI-Enhanced Writing</strong> — Posts generated and refined with the help of Claude AI</li>
+            <li><strong>Beautiful Design</strong> — Clean, readable typography that respects your attention</li>
+            <li><strong>Deep Dives</strong> — Content that rewards careful reading and contemplation</li>
+          </ul>
+        </div>
+
+        <div class="about-philosophy">
+          <blockquote>
+            "The real voyage of discovery consists not in seeking new landscapes, but in having new eyes."
+            <cite>— Marcel Proust</cite>
+          </blockquote>
+        </div>
+
+        <div class="about-contact">
+          <h3>Get in Touch</h3>
+          <p>Have something fascinating to share? Found a broken link? Just want to say hello?</p>
+          <p>Reach out at <a href="mailto:hello@rabbitholes.blog">hello@rabbitholes.blog</a></p>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</BaseLayout>
+
+<style>
+  .about-content {
+    max-width: 680px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  h2 {
+    font-size: 32px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 40px;
+    color: var(--text-primary-light);
+  }
+
+  body.dark h2 {
+    color: var(--text-primary-dark);
+  }
+
+  .about-text {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 18px;
+    margin-bottom: 48px;
+  }
+
+  .about-text p {
+    margin-bottom: 24px;
+    color: var(--text-primary-light);
+  }
+
+  body.dark .about-text p {
+    color: var(--text-primary-dark);
+  }
+
+  .about-features,
+  .about-contact {
+    margin-bottom: 48px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-primary-light);
+  }
+
+  body.dark h3 {
+    color: var(--text-primary-dark);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    margin-bottom: 12px;
+    padding-left: 20px;
+    position: relative;
+    color: var(--text-primary-light);
+  }
+
+  li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--link-light);
+  }
+
+  body.dark li {
+    color: var(--text-primary-dark);
+  }
+
+  body.dark li::before {
+    color: var(--link-dark);
+  }
+
+  strong {
+    font-weight: 600;
+    color: var(--text-primary-light);
+  }
+
+  body.dark strong {
+    color: var(--text-primary-dark);
+  }
+
+  .about-philosophy {
+    margin: 56px 0;
+    text-align: center;
+  }
+
+  blockquote {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 24px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--text-secondary-light);
+    margin: 0;
+    padding: 40px 20px;
+    background: var(--accent-light);
+    border-radius: 12px;
+    position: relative;
+  }
+
+  body.dark blockquote {
+    color: var(--text-secondary-dark);
+    background: var(--accent-dark);
+  }
+
+  cite {
+    display: block;
+    margin-top: 20px;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    color: var(--text-tertiary-light);
+  }
+
+  body.dark cite {
+    color: var(--text-tertiary-dark);
+  }
+
+  .about-contact p {
+    color: var(--text-primary-light);
+    margin-bottom: 16px;
+  }
+
+  body.dark .about-contact p {
+    color: var(--text-primary-dark);
+  }
+
+  a {
+    color: var(--link-light);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  body.dark a {
+    color: var(--link-dark);
+  }
+
+  @media (max-width: 768px) {
+    .about-text {
+      font-size: 16px;
+    }
+
+    blockquote {
+      font-size: 20px;
+      padding: 32px 20px;
+    }
+
+    h2 {
+      font-size: 28px;
+    }
+  }
+</style>

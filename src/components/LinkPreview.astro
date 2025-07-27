@@ -1,0 +1,363 @@
+---
+import { extractLinkPreviewData, getYouTubeVideoId, getTweetId, getGitHubRepoInfo, fetchOpenGraphData } from '../lib/link-preview';
+
+export interface Props {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+}
+
+const { url, title, description, image } = Astro.props;
+let linkData = extractLinkPreviewData(url);
+
+// Disable automatic Open Graph fetching for now to improve performance
+// Users can provide manual metadata for better performance
+// TODO: Implement client-side fetching if needed
+
+// Use manual props if provided, otherwise use fetched data
+const finalTitle = title || linkData.title;
+const finalDescription = description || linkData.description;
+const finalImage = image || linkData.image;
+const hostname = new URL(url).hostname;
+
+// Extract specific IDs for embeddable content
+const youtubeId = linkData.type === 'youtube' ? getYouTubeVideoId(url) : null;
+const tweetId = linkData.type === 'twitter' ? getTweetId(url) : null;
+const githubRepo = linkData.type === 'github' ? getGitHubRepoInfo(url) : null;
+---
+
+<div class={`link-preview ${linkData.type}`}>
+  {linkData.type === 'youtube' && youtubeId && (
+    <div class="youtube-embed">
+      <iframe
+        src={`https://www.youtube.com/embed/${youtubeId}`}
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+    </div>
+  )}
+  
+  {linkData.type === 'twitter' && tweetId && (
+    <div class="twitter-embed">
+      <blockquote class="twitter-tweet" data-theme="light" data-dnt="true">
+        <p>Loading tweet...</p>
+        <a href={url} target="_blank" rel="noopener noreferrer">View on Twitter/X →</a>
+      </blockquote>
+    </div>
+  )}
+  
+  {linkData.type === 'github' && githubRepo && (
+    <div class="github-preview">
+      <div class="github-header">
+        <svg class="github-icon" viewBox="0 0 16 16" width="16" height="16">
+          <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <span class="github-repo">{githubRepo.owner}/{githubRepo.repo}</span>
+      </div>
+      {(finalTitle || finalDescription) && (
+        <div class="github-content">
+          {finalTitle && <h4 class="github-title">{finalTitle}</h4>}
+          {finalDescription && <p class="github-description">{finalDescription}</p>}
+        </div>
+      )}
+      <a href={url} class="github-link" target="_blank" rel="noopener noreferrer">
+        View on GitHub →
+      </a>
+    </div>
+  )}
+  
+  {linkData.type === 'link' && (
+    <a href={url} class="link-card" target="_blank" rel="noopener noreferrer">
+      {finalImage && (
+        <div class="link-image">
+          <img src={finalImage} alt={finalTitle || 'Link preview'} loading="lazy" />
+        </div>
+      )}
+      <div class="link-content">
+        <h4 class="link-title">{finalTitle || hostname}</h4>
+        {finalDescription && <p class="link-description">{finalDescription}</p>}
+        <span class="link-url">{hostname}</span>
+      </div>
+      <div class="link-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 17l10-10"></path>
+          <path d="M7 7h10v10"></path>
+        </svg>
+      </div>
+    </a>
+  )}
+</div>
+
+<style>
+  .link-preview {
+    margin: var(--space-xl) 0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--accent-light);
+    border: 1px solid var(--border-light);
+  }
+
+  body.dark .link-preview {
+    background: var(--accent-dark);
+    border-color: var(--border-dark);
+  }
+
+  /* YouTube Embed */
+  .youtube-embed {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    background: #000;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .youtube-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Twitter Embed */
+  .twitter-embed {
+    padding: var(--space-sm);
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    min-height: 80px;
+    max-height: 400px;
+    overflow: hidden;
+  }
+
+  body.dark .twitter-embed {
+    background: #15202b;
+  }
+
+  .twitter-embed .twitter-tweet {
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* GitHub Preview */
+  .github-preview {
+    padding: var(--space-md);
+    min-height: 80px;
+    max-height: 150px;
+  }
+
+  .github-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .github-icon {
+    color: var(--text-secondary-light);
+  }
+
+  body.dark .github-icon {
+    color: var(--text-secondary-dark);
+  }
+
+  .github-repo {
+    font-family: var(--font-base);
+    font-weight: 600;
+    color: var(--text-primary-light);
+    font-size: var(--font-size-lg);
+  }
+
+  body.dark .github-repo {
+    color: var(--text-primary-dark);
+  }
+
+  .github-content {
+    margin-bottom: var(--space-sm);
+  }
+
+  .github-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+    color: var(--text-primary-light);
+    font-family: var(--font-base);
+  }
+
+  body.dark .github-title {
+    color: var(--text-primary-dark);
+  }
+
+  .github-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary-light);
+    line-height: var(--leading-normal);
+    margin: 0;
+  }
+
+  body.dark .github-description {
+    color: var(--text-secondary-dark);
+  }
+
+  .github-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--link-light);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+  }
+
+  body.dark .github-link {
+    color: var(--link-dark);
+  }
+
+  /* General Link Card - Clean, no hover effects */
+  .link-card {
+    display: flex;
+    text-decoration: none;
+    color: inherit;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    min-height: 80px;
+    max-height: 120px;
+  }
+
+  .link-image {
+    flex-shrink: 0;
+    width: 100px;
+    height: 70px;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--border-light);
+  }
+
+  body.dark .link-image {
+    background: var(--border-dark);
+  }
+
+  .link-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .link-image img:not([src]),
+  .link-image img[src=""] {
+    display: none;
+  }
+
+  .link-image:empty::before {
+    content: "📄";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 24px;
+    color: var(--text-tertiary-light);
+  }
+
+  body.dark .link-image:empty::before {
+    color: var(--text-tertiary-dark);
+  }
+
+  .link-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .link-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+    color: var(--text-primary-light);
+    font-family: var(--font-base);
+    line-height: var(--leading-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  body.dark .link-title {
+    color: var(--text-primary-dark);
+  }
+
+  .link-description {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary-light);
+    line-height: var(--leading-normal);
+    margin-bottom: var(--space-xs);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  body.dark .link-description {
+    color: var(--text-secondary-dark);
+  }
+
+  .link-url {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary-light);
+    font-family: var(--font-base);
+    font-weight: 500;
+  }
+
+  body.dark .link-url {
+    color: var(--text-tertiary-dark);
+  }
+
+  .link-arrow {
+    flex-shrink: 0;
+    color: var(--text-tertiary-light);
+  }
+
+  body.dark .link-arrow {
+    color: var(--text-tertiary-dark);
+  }
+
+  /* Mobile Responsiveness */
+  @media (max-width: 768px) {
+    .link-card {
+      flex-direction: column;
+      gap: var(--space-sm);
+      padding: var(--space-md);
+    }
+
+    .link-image {
+      width: 100%;
+      height: 180px;
+    }
+
+    .link-arrow {
+      align-self: flex-start;
+    }
+
+    .github-preview {
+      padding: var(--space-md);
+    }
+
+    .youtube-embed {
+      margin: var(--space-md) 0;
+    }
+
+    .twitter-embed {
+      padding: var(--space-sm);
+    }
+  }
+</style>
+
+{linkData.type === 'twitter' && (
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+)}

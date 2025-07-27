@@ -1,0 +1,421 @@
+---
+import { type CollectionEntry } from 'astro:content';
+
+export interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const formattedDate = new Intl.DateTimeFormat('en-US', { 
+  day: 'numeric', 
+  month: 'long', 
+  year: 'numeric' 
+}).format(post.data.date);
+---
+
+<article class="post-card">
+  <a href={`/posts/${post.slug}`} class="post-card-link">
+    <div class="post-card-meta">{formattedDate}</div>
+    <h2 class="post-card-title">{post.data.title}</h2>
+    {post.data.excerpt && (
+      <p class="post-card-excerpt">{post.data.excerpt}</p>
+    )}
+    <div class="post-card-content">
+      <Content />
+    </div>
+  </a>
+  
+  {post.data.tags.length > 0 && (
+    <nav class="post-card-tags" aria-label={`Tags for ${post.data.title}`}>
+      <span class="visually-hidden">Tags:</span>
+      <ul class="post-tag-list">
+        {post.data.tags.map((tag) => (
+          <li><a href={`/tags/${tag}`} class="post-tag">{tag}</a></li>
+        ))}
+      </ul>
+    </nav>
+  )}
+  
+  <div class="post-card-actions">
+    <a href={`/posts/${post.slug}`} class="read-more-link">Read full post →</a>
+  </div>
+</article>
+
+<style>
+  /* Post Card Container */
+  .post-card {
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-light);
+    width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  body.dark .post-card {
+    border-bottom-color: var(--border-dark);
+  }
+
+  .post-card:last-child {
+    border-bottom: none;
+    margin-bottom: var(--space-lg);
+  }
+
+  /* Post Card Link */
+  .post-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* Post Meta */
+  .post-card-meta {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary-light);
+    margin-bottom: var(--space-sm);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
+
+  body.dark .post-card-meta {
+    color: var(--text-tertiary-dark);
+  }
+
+  /* Post Title */
+  .post-card-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary-light);
+    letter-spacing: -0.01em;
+  }
+
+  body.dark .post-card-title {
+    color: var(--text-primary-dark);
+  }
+
+  /* Post Excerpt */
+  .post-card-excerpt {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary-light);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-md);
+    font-style: italic;
+  }
+
+  body.dark .post-card-excerpt {
+    color: var(--text-secondary-dark);
+  }
+
+  /* Post Content Styling - Scoped to homepage cards only */
+  .post-card-content {
+    font-size: var(--font-size-base);
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary-light);
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  body.dark .post-card-content {
+    color: var(--text-primary-dark);
+  }
+
+  .post-card-content :global(p) {
+    margin-bottom: var(--space-sm);
+    text-indent: 0;
+  }
+
+  .post-card-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .post-card-content :global(h2) {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin: var(--space-md) 0 var(--space-sm) 0;
+    letter-spacing: -0.01em;
+    line-height: var(--leading-tight);
+  }
+
+  .post-card-content :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .post-card-content :global(a) {
+    color: var(--link-light);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    transition: all var(--transition-normal);
+  }
+
+  .post-card-content :global(a:hover) {
+    text-decoration-thickness: 2px;
+  }
+
+  body.dark .post-card-content :global(a) {
+    color: var(--link-dark);
+  }
+
+  /* Tags */
+  .post-card-tags {
+    margin-top: var(--space-md);
+  }
+
+  .post-tag-list {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .post-tag-list li {
+    margin: 0;
+  }
+
+  .post-tag {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    letter-spacing: 0.025em;
+    color: var(--text-secondary-light);
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+  }
+
+  .post-tag:hover {
+    color: var(--text-primary-light);
+    border-color: var(--text-primary-light);
+    background: var(--accent-light);
+  }
+
+  body.dark .post-tag {
+    color: var(--text-secondary-dark);
+    border-color: var(--border-dark);
+  }
+
+  body.dark .post-tag:hover {
+    color: var(--text-primary-dark);
+    border-color: var(--text-primary-dark);
+    background: var(--accent-dark);
+  }
+
+  .post-tag:focus {
+    outline: 2px solid var(--link-light);
+    outline-offset: 2px;
+  }
+
+  body.dark .post-tag:focus {
+    outline-color: var(--link-dark);
+  }
+
+  /* Actions */
+  .post-card-actions {
+    margin-top: var(--space-md);
+    text-align: center;
+  }
+
+  .read-more-link {
+    display: inline-block;
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid transparent;
+    transition: all var(--transition-normal);
+  }
+
+  .read-more-link:hover {
+    color: var(--text-primary-light);
+    border-bottom-color: var(--text-primary-light);
+  }
+
+  body.dark .read-more-link {
+    color: var(--text-secondary-dark);
+  }
+
+  body.dark .read-more-link:hover {
+    color: var(--text-primary-dark);
+    border-bottom-color: var(--text-primary-dark);
+  }
+
+  .read-more-link:focus {
+    outline: 2px solid var(--link-light);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  body.dark .read-more-link:focus {
+    outline-color: var(--link-dark);
+  }
+
+  /* Quote styling for post cards */
+  .post-card-content :global(.quote) {
+    font-style: italic;
+    font-size: var(--font-size-lg);
+    line-height: var(--leading-relaxed);
+    margin: var(--space-md) 0;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--accent-light);
+    border-left: 3px solid var(--link-light);
+    color: var(--text-secondary-light);
+    border-radius: 0 6px 6px 0;
+  }
+
+  body.dark .post-card-content :global(.quote) {
+    background: var(--accent-dark);
+    border-left-color: var(--link-dark);
+    color: var(--text-secondary-dark);
+  }
+
+  /* Link Previews in post cards - Clean, minimal design */
+  .post-card-content :global(.link-preview) {
+    margin: var(--space-md) 0;
+    border-radius: var(--radius-lg);
+    background: var(--accent-light);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+  }
+
+  body.dark .post-card-content :global(.link-preview) {
+    background: var(--accent-dark);
+    border-color: var(--border-dark);
+  }
+
+  .post-card-content :global(.link-preview) :global(.link-card) {
+    padding: var(--space-sm);
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    min-height: 70px;
+  }
+
+  .post-card-content :global(.link-preview) :global(.link-content) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .post-card-content :global(.link-preview) :global(.link-title) {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin-bottom: 4px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  body.dark .post-card-content :global(.link-preview) :global(.link-title) {
+    color: var(--text-primary-dark);
+  }
+
+  .post-card-content :global(.link-preview) :global(.link-description) {
+    font-size: var(--font-size-sm);
+    line-height: 1.3;
+    color: var(--text-secondary-light);
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  body.dark .post-card-content :global(.link-preview) :global(.link-description) {
+    color: var(--text-secondary-dark);
+  }
+
+  .post-card-content :global(.link-preview) :global(.link-url) {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    font-weight: 500;
+  }
+
+  body.dark .post-card-content :global(.link-preview) :global(.link-url) {
+    color: var(--text-tertiary-dark);
+  }
+
+  /* Homepage-specific link preview overrides using higher specificity */
+  .post-card .post-card-content :global(.link-preview.link) :global(.link-image) {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .post-card .post-card-content :global(.link-preview) :global(.link-arrow) {
+    display: none;
+  }
+
+  .post-card .post-card-content :global(.link-preview.youtube) :global(.youtube-embed) {
+    display: none;
+  }
+
+  .post-card .post-card-content :global(.link-preview.github) :global(.github-preview) {
+    padding: var(--space-sm);
+  }
+
+  .post-card .post-card-content :global(.link-preview.github) :global(.github-header) {
+    margin-bottom: var(--space-xs);
+  }
+
+  .post-card .post-card-content :global(.link-preview.github) :global(.github-repo) {
+    font-size: var(--font-size-sm);
+  }
+
+  .post-card .post-card-content :global(.link-preview.github) :global(.github-description) {
+    font-size: var(--font-size-sm);
+    -webkit-line-clamp: 1;
+  }
+
+  .post-card .post-card-content :global(.link-preview.twitter) :global(.twitter-embed) {
+    padding: var(--space-sm);
+    min-height: 50px;
+    max-height: 70px;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .post-card {
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-md);
+    }
+    
+    .post-card-content {
+      font-size: var(--font-size-sm);
+      line-height: var(--leading-normal);
+    }
+    
+    .post-card-content :global(h2) {
+      font-size: var(--font-size-lg);
+      margin: var(--space-sm) 0 var(--space-xs) 0;
+    }
+    
+    .post-card-content :global(.quote) {
+      font-size: var(--font-size-base);
+      padding: var(--space-sm);
+      margin: var(--space-sm) 0;
+    }
+    
+    .post-card-tags {
+      margin-top: var(--space-sm);
+    }
+  }
+</style>

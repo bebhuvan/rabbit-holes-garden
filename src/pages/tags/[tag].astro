@@ -1,0 +1,161 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import PostCard from '../../components/PostCard.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  
+  // Get all unique tags
+  const tags = [...new Set(posts.flatMap(post => post.data.tags))];
+  
+  return tags.map((tag) => ({
+    params: { tag },
+    props: { 
+      tag,
+      posts: posts.filter(post => post.data.tags.includes(tag))
+    },
+  }));
+}
+
+type Props = {
+  tag: string;
+  posts: CollectionEntry<'posts'>[];
+};
+
+const { tag, posts } = Astro.props;
+const postCount = posts.length;
+---
+
+<BaseLayout 
+    title={`Posts tagged "${tag}"`} 
+    description={`All posts tagged with ${tag}. Browse ${postCount} ${postCount === 1 ? 'post' : 'posts'} about ${tag}.`}
+  >
+  <div class="container">
+    <Header />
+    
+    <main>
+      <div class="tag-header">
+        <h1 class="tag-title">
+          Posts tagged <span class="tag-name">"{tag}"</span>
+        </h1>
+        <p class="tag-count">
+          {postCount} {postCount === 1 ? 'post' : 'posts'} found
+        </p>
+      </div>
+
+      <div class="posts-list">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+
+      <nav class="tag-navigation">
+        <a href="/" class="nav-link">← Back to all posts</a>
+        <a href="/search" class="nav-link">Search posts →</a>
+      </nav>
+    </main>
+
+    <Footer />
+  </div>
+</BaseLayout>
+
+<style>
+  .tag-header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  body.dark .tag-header {
+    border-bottom-color: var(--border-dark);
+  }
+
+  .tag-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary-light);
+    line-height: 1.3;
+  }
+
+  body.dark .tag-title {
+    color: var(--text-primary-dark);
+  }
+
+  .tag-name {
+    color: var(--link-light);
+    font-weight: 700;
+  }
+
+  body.dark .tag-name {
+    color: var(--link-dark);
+  }
+
+  .tag-count {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  body.dark .tag-count {
+    color: var(--text-secondary-dark);
+  }
+
+  .posts-list {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .tag-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    margin-top: 48px;
+    border-top: 1px solid var(--border-light);
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.dark .tag-navigation {
+    border-top-color: var(--border-dark);
+  }
+
+  .nav-link {
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary-light);
+  }
+
+  body.dark .nav-link {
+    color: var(--text-secondary-dark);
+  }
+
+  body.dark .nav-link:hover {
+    color: var(--text-primary-dark);
+  }
+
+  @media (max-width: 768px) {
+    .tag-title {
+      font-size: 24px;
+    }
+
+    .tag-navigation {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+    }
+  }
+</style>

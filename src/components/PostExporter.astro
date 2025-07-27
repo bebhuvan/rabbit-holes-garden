@@ -1,0 +1,223 @@
+---
+// Component for exporting generated posts as downloadable files
+---
+
+<div class="post-exporter" id="post-exporter" style="display: none;">
+  <h3>Export Generated Post</h3>
+  <div class="export-content">
+    <p>Copy the content below and save it manually:</p>
+    <div class="export-instructions">
+      <ol>
+        <li>Copy the markdown content below</li>
+        <li>Create a new file: <code>src/content/posts/[post-slug].md</code></li>
+        <li>Paste the content and save</li>
+        <li>Commit and push to deploy</li>
+      </ol>
+    </div>
+    <div class="export-actions">
+      <button class="btn-primary" id="copy-content-btn">Copy Content</button>
+      <button class="btn-secondary" id="download-file-btn">Download File</button>
+    </div>
+    <textarea id="export-textarea" readonly rows="20"></textarea>
+  </div>
+</div>
+
+<script>
+  function showExporter(postData) {
+    const exporter = document.getElementById('post-exporter');
+    const textarea = document.getElementById('export-textarea');
+    const copyBtn = document.getElementById('copy-content-btn');
+    const downloadBtn = document.getElementById('download-file-btn');
+    
+    // Generate slug from title
+    const slug = postData.title.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    
+    // Create markdown content
+    const markdownContent = `---
+title: "${postData.title}"
+date: ${new Date().toISOString().split('T')[0]}
+excerpt: "${postData.excerpt || ''}"
+tags: [${postData.tags?.map(tag => `"${tag}"`).join(', ') || ''}]
+---
+
+${postData.content}`;
+
+    textarea.value = markdownContent;
+    exporter.style.display = 'block';
+    
+    // Copy to clipboard functionality
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(markdownContent);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy Content';
+        }, 2000);
+      } catch (err) {
+        // Fallback for older browsers
+        textarea.select();
+        document.execCommand('copy');
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy Content';
+        }, 2000);
+      }
+    };
+    
+    // Download file functionality
+    downloadBtn.onclick = () => {
+      const blob = new Blob([markdownContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${slug}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+    
+    exporter.scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  // Make function globally available
+  window.showPostExporter = showExporter;
+</script>
+
+<style>
+  .post-exporter {
+    background: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 32px;
+  }
+
+  body.dark .post-exporter {
+    background: var(--accent-dark);
+    border-color: var(--border-dark);
+  }
+
+  .post-exporter h3 {
+    margin-bottom: 24px;
+    color: var(--text-primary-light);
+    font-size: 20px;
+  }
+
+  body.dark .post-exporter h3 {
+    color: var(--text-primary-dark);
+  }
+
+  .export-instructions {
+    background: var(--accent-light);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  body.dark .export-instructions {
+    background: var(--bg-dark);
+    border-color: var(--border-dark);
+  }
+
+  .export-instructions ol {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary-light);
+  }
+
+  body.dark .export-instructions ol {
+    color: var(--text-secondary-dark);
+  }
+
+  .export-instructions code {
+    background: var(--border-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+  }
+
+  body.dark .export-instructions code {
+    background: var(--border-dark);
+    color: var(--text-primary-dark);
+  }
+
+  .export-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  #export-textarea {
+    width: 100%;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--accent-light);
+    color: var(--text-primary-light);
+    resize: vertical;
+  }
+
+  body.dark #export-textarea {
+    border-color: var(--border-dark);
+    background: var(--bg-dark);
+    color: var(--text-primary-dark);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--link-light);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #0052a3;
+    transform: translateY(-1px);
+  }
+
+  body.dark .btn-primary {
+    background: var(--link-dark);
+    color: var(--bg-dark);
+  }
+
+  .btn-secondary {
+    background: var(--accent-light);
+    color: var(--text-primary-light);
+    border: 1px solid var(--border-light);
+  }
+
+  .btn-secondary:hover {
+    background: var(--border-light);
+    transform: translateY(-1px);
+  }
+
+  body.dark .btn-secondary {
+    background: var(--accent-dark);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
+  }
+
+  body.dark .btn-secondary:hover {
+    background: var(--border-dark);
+  }
+</style>

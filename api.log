@@ -1,0 +1,9 @@
+[dotenv@17.2.1] injecting env (1) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+🚀 Test API server running on http://localhost:3000
+📡 Endpoint: http://localhost:3000/api/generate-post
+GET /api/generate-post
+POST /api/generate-post
+🤖 Generating post for: text This fascinating article explores how trees communicate through underground fungal networks, sharing...
+✅ Post generated: The Hidden Language of Forests: How Trees Whisper Through Fungal Networks
+GET /api/generate-post
+GET /api/generate-post

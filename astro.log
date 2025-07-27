@@ -1,0 +1,23 @@
+
+> rabbit-holes@0.0.1 dev
+> astro dev
+
+15:54:43 [types] Generated 0ms
+15:54:43 [content] Syncing content
+15:54:43 [content] Synced content
+
+ astro  v5.12.3 ready in 375 ms
+
+┃ Local    http://localhost:4321/
+┃ Network  use --host to expose
+
+15:54:43 watching for file changes...
+15:54:52 [200] HEAD / 31ms
+15:55:33 [200] /posts/the-future-of-web-development 12ms
+15:55:33 [200] /posts/the-future-of-web-development 6ms
+15:55:34 [200] /posts/the-future-of-web-development 11ms
+15:55:34 [200] /posts/the-future-of-web-development 9ms
+15:55:34 [200] /posts/the-future-of-web-development 6ms
+15:55:34 [200] /posts/the-future-of-web-development 7ms
+15:55:34 [404] /sw.js 7ms
+15:55:34 [200] /posts/the-future-of-web-development 5ms

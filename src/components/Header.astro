@@ -1,0 +1,155 @@
+---
+const currentPath = Astro.url.pathname;
+---
+
+<header>
+    <h1 class="site-title"><a href="/">Rabbit Holes</a></h1>
+    <p class="site-description">Beautiful things from across the internet</p>
+    <nav>
+        <a href="/archive" class={currentPath === '/archive' ? 'active' : ''}>Archive</a>
+        <a href="/search" class={currentPath === '/search' ? 'active' : ''}>Search</a>
+        <a href="/about" class={currentPath === '/about' ? 'active' : ''}>About</a>
+        <a href="/rss" class={currentPath === '/rss' ? 'active' : ''}>RSS</a>
+    </nav>
+</header>
+
+<style>
+    header {
+        padding: 48px 0 32px;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1px;
+        height: 40px;
+        background: var(--border-light);
+        opacity: 0.5;
+    }
+
+    body.dark header::after {
+        background: var(--border-dark);
+    }
+
+    .site-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+        position: relative;
+        display: inline-block;
+    }
+
+    .site-title::after {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: -12px;
+        width: 6px;
+        height: 6px;
+        background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0.7; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .site-title a {
+        color: var(--text-primary-light);
+        text-decoration: none;
+    }
+
+    body.dark .site-title a {
+        color: var(--text-primary-dark);
+    }
+
+    .site-description {
+        font-size: 14px;
+        color: var(--text-secondary-light);
+        font-weight: 400;
+        line-height: 1.5;
+        max-width: 420px;
+        margin: 0 auto 24px;
+    }
+
+    body.dark .site-description {
+        color: var(--text-secondary-dark);
+    }
+
+    nav {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+
+    nav a {
+        color: var(--text-tertiary-light);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        position: relative;
+    }
+
+    nav a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: var(--text-primary-light);
+        transition: width 0.3s ease;
+    }
+
+    nav a:hover,
+    nav a.active {
+        color: var(--text-primary-light);
+    }
+
+    nav a:hover::after,
+    nav a.active::after {
+        width: 100%;
+    }
+
+    body.dark nav a {
+        color: var(--text-tertiary-dark);
+    }
+
+    body.dark nav a:hover,
+    body.dark nav a.active {
+        color: var(--text-primary-dark);
+    }
+
+    body.dark nav a::after {
+        background: var(--text-primary-dark);
+    }
+
+    @media (max-width: 768px) {
+        header {
+            padding: 32px 0 24px;
+            margin-bottom: 32px;
+        }
+        
+        .site-title {
+            font-size: 22px;
+        }
+        
+        .site-description {
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+    }
+</style>

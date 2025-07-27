@@ -1,0 +1,124 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const posts = await getCollection('posts');
+const sortedPosts = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout title="Archive">
+  <div class="container">
+    <Header />
+    
+    <main>
+      <h2 class="page-title">Archive</h2>
+      <div class="archive-grid">
+        {sortedPosts.map((post) => {
+          const formattedDate = new Intl.DateTimeFormat('en-US', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          }).format(post.data.date);
+          
+          return (
+            <a href={`/posts/${post.slug}`} class="archive-item">
+              <h3>{post.data.title}</h3>
+              {post.data.excerpt && <p class="excerpt">{post.data.excerpt}</p>}
+              <div class="meta">{formattedDate}</div>
+            </a>
+          );
+        })}
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</BaseLayout>
+
+<style>
+  .page-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 60px;
+    letter-spacing: -0.02em;
+  }
+
+  .archive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    margin-top: 60px;
+  }
+
+  .archive-item {
+    background: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .archive-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--text-tertiary-light);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .archive-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    border-color: var(--text-tertiary-light);
+  }
+
+  .archive-item:hover::before {
+    opacity: 1;
+  }
+
+  .archive-item h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .archive-item .excerpt {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .archive-item .meta {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  body.dark .archive-item {
+    background: var(--accent-dark);
+    border-color: var(--border-dark);
+  }
+
+  body.dark .archive-item .excerpt {
+    color: var(--text-secondary-dark);
+  }
+
+  body.dark .archive-item .meta {
+    color: var(--text-tertiary-dark);
+  }
+</style>

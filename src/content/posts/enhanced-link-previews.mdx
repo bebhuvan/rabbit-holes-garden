@@ -1,0 +1,59 @@
+---
+title: "Enhanced Link Previews Test"
+date: 2025-03-17
+excerpt: "Testing the new Open Graph metadata fetching for better link previews"
+tags: ["demo", "links", "opengraph"]
+---
+
+import LinkPreview from '../../components/LinkPreview.astro';
+
+This post tests our enhanced link preview system with automatic Open Graph metadata fetching.
+
+## Automatic Open Graph Fetching
+
+These links should automatically fetch their metadata:
+
+<LinkPreview url="https://stripe.com" />
+
+<LinkPreview url="https://linear.app" />
+
+<LinkPreview url="https://astro.build" />
+
+## Manual Override (Legacy Method)
+
+You can still manually provide metadata if needed:
+
+<LinkPreview 
+  url="https://example.com" 
+  title="Custom Title Override"
+  description="This description was manually provided and overrides any fetched metadata"
+  image="https://via.placeholder.com/300x200"
+/>
+
+## YouTube Embeds
+
+YouTube videos should embed properly:
+
+<LinkPreview url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
+
+## GitHub Repositories
+
+GitHub repos should show repository info:
+
+<LinkPreview url="https://github.com/withastro/astro" />
+
+<LinkPreview url="https://github.com/microsoft/vscode" />
+
+## Twitter/X Embeds
+
+Twitter/X posts should embed:
+
+<LinkPreview url="https://twitter.com/astrodotbuild/status/1234567890123456789" />
+
+## Fallback Cases
+
+Links without Open Graph data should still show cleanly:
+
+<LinkPreview url="https://httpbin.org/html" />
+
+The system gracefully handles errors and provides fallbacks with at least the hostname as the title.

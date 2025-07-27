@@ -1,0 +1,534 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import LinkPreview from '../../components/LinkPreview.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+type Props = {
+  post: CollectionEntry<'posts'>;
+};
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const formattedDate = new Intl.DateTimeFormat('en-US', { 
+  day: 'numeric', 
+  month: 'long', 
+  year: 'numeric' 
+}).format(post.data.date);
+
+const currentUrl = new URL(Astro.url.pathname, Astro.site || 'http://localhost:4321');
+---
+
+<BaseLayout 
+    title={post.data.title} 
+    description={post.data.excerpt} 
+    type="article"
+    canonicalURL={currentUrl.href}
+  >
+  <div class="container">
+    <Header />
+    
+    <main class="main" id="main-content">
+      <article class="article">
+        <header class="article-header">
+          <div class="article-meta">{formattedDate}</div>
+          <h1 class="article-title">{post.data.title}</h1>
+          {post.data.excerpt && (
+            <p class="article-excerpt">{post.data.excerpt}</p>
+          )}
+          
+          <nav class="article-actions" aria-label="Article sharing options">
+            <div class="share-buttons">
+              <button class="button copy-link" data-url={currentUrl.href} title="Copy link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                Copy Link
+              </button>
+              
+              <button class="button twitter-share" title="Share on Twitter">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                Share
+              </button>
+
+              <button class="button random-post" title="Random post">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M16 3h5v5"></path>
+                  <path d="M8 3H3v5"></path>
+                  <path d="M16 21h5v-5"></path>
+                  <path d="M8 21H3v-5"></path>
+                  <path d="M9 12h6"></path>
+                  <path d="M12 9v6"></path>
+                </svg>
+                Random
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div class="article-content">
+          <Content />
+        </div>
+
+        {post.data.tags.length > 0 && (
+          <footer class="article-footer">
+            <nav class="article-tags" aria-label="Article tags">
+              <span class="visually-hidden">Tags:</span>
+              <ul class="tag-list">
+                {post.data.tags.map((tag) => (
+                  <li><a href={`/tags/${tag}`} class="tag">{tag}</a></li>
+                ))}
+              </ul>
+            </nav>
+          </footer>
+        )}
+      </article>
+
+      <nav class="post-navigation">
+        <a href="/" class="nav-link">← Back to all posts</a>
+        <a href="/archive" class="nav-link">View archive →</a>
+      </nav>
+    </main>
+
+    <Footer />
+  </div>
+
+  <script>
+    // Copy link functionality
+    document.querySelector('.copy-link')?.addEventListener('click', async (e) => {
+      const url = e.currentTarget.dataset.url;
+      try {
+        await navigator.clipboard.writeText(url);
+        const btn = e.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"></polyline></svg> Copied!';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+      }
+    });
+
+    // Twitter share
+    document.querySelector('.twitter-share')?.addEventListener('click', () => {
+      const url = encodeURIComponent(window.location.href);
+      const text = encodeURIComponent(document.title);
+      window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=550,height=420');
+    });
+
+    // Random post
+    document.querySelector('.random-post')?.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/random-post.json');
+        const data = await response.json();
+        if (data.slug) {
+          window.location.href = `/posts/${data.slug}`;
+        } else {
+          window.location.href = '/';
+        }
+      } catch (error) {
+        console.error('Failed to get random post:', error);
+        window.location.href = '/';
+      }
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .main {
+    padding: var(--space-xl) 0;
+  }
+
+  /* Article Container */
+  .article {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* Article Header */
+  .article-header {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  body.dark .article-header {
+    border-bottom-color: var(--border-dark);
+  }
+
+  .article-meta {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary-light);
+    margin-bottom: var(--space-sm);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
+
+  body.dark .article-meta {
+    color: var(--text-tertiary-dark);
+  }
+
+  .article-title {
+    font-size: var(--font-size-4xl);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-md);
+    letter-spacing: -0.025em;
+  }
+
+  .article-excerpt {
+    font-size: var(--font-size-xl);
+    color: var(--text-secondary-light);
+    font-style: italic;
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-lg);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.dark .article-excerpt {
+    color: var(--text-secondary-dark);
+  }
+
+  /* Share Buttons */
+  .article-actions {
+    margin-bottom: 0;
+  }
+
+  .share-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    color: var(--text-secondary-light);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    font-family: var(--font-base);
+  }
+
+  .share-btn:hover {
+    background: var(--accent-light);
+    color: var(--text-primary-light);
+    border-color: var(--text-primary-light);
+  }
+
+  body.dark .share-btn {
+    border-color: var(--border-dark);
+    color: var(--text-secondary-dark);
+  }
+
+  body.dark .share-btn:hover {
+    background: var(--accent-dark);
+    color: var(--text-primary-dark);
+    border-color: var(--text-primary-dark);
+  }
+
+  /* Article Content - Clean Typography */
+  .article-content {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .article-content :global(p) {
+    font-size: var(--font-size-lg);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-lg);
+    color: var(--text-primary-light);
+  }
+
+  .article-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  body.dark .article-content :global(p) {
+    color: var(--text-primary-dark);
+  }
+
+  .article-content :global(h2) {
+    font-size: var(--font-size-3xl);
+    font-weight: 600;
+    margin: var(--space-xl) 0 var(--space-md) 0;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+  }
+
+  .article-content :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .article-content :global(h3) {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    margin: var(--space-xl) 0 var(--space-sm) 0;
+    line-height: var(--leading-tight);
+  }
+
+  .article-content :global(h4) {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin: var(--space-lg) 0 var(--space-sm) 0;
+    line-height: var(--leading-tight);
+  }
+
+  /* Lists */
+  .article-content :global(ul),
+  .article-content :global(ol) {
+    margin: var(--space-md) 0;
+    padding-left: var(--space-lg);
+  }
+
+  .article-content :global(li) {
+    font-size: var(--font-size-lg);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-xs);
+    color: var(--text-primary-light);
+  }
+
+  body.dark .article-content :global(li) {
+    color: var(--text-primary-dark);
+  }
+
+  .article-content :global(li:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Links */
+  .article-content :global(a) {
+    color: var(--link-light);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    transition: all var(--transition-normal);
+    font-weight: 500;
+  }
+
+  .article-content :global(a:hover) {
+    text-decoration-thickness: 2px;
+  }
+
+  body.dark .article-content :global(a) {
+    color: var(--link-dark);
+  }
+
+  /* Emphasis */
+  .article-content :global(strong) {
+    font-weight: 600;
+    color: var(--text-primary-light);
+  }
+
+  body.dark .article-content :global(strong) {
+    color: var(--text-primary-dark);
+  }
+
+  /* Quote styling */
+  .article-content :global(.quote) {
+    font-style: italic;
+    font-size: var(--font-size-xl);
+    line-height: var(--leading-relaxed);
+    margin: var(--space-xl) 0;
+    padding: var(--space-lg);
+    background: var(--accent-light);
+    border-left: 4px solid var(--link-light);
+    color: var(--text-secondary-light);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+
+  body.dark .article-content :global(.quote) {
+    background: var(--accent-dark);
+    border-left-color: var(--link-dark);
+    color: var(--text-secondary-dark);
+  }
+
+  /* Link Previews */
+  .article-content :global(.link-preview) {
+    margin: var(--space-xl) 0;
+  }
+
+  /* Article Footer */
+  .article-footer {
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--border-light);
+    margin-bottom: var(--space-xl);
+  }
+
+  body.dark .article-footer {
+    border-top-color: var(--border-dark);
+  }
+
+  .article-tags {
+    display: flex;
+    justify-content: center;
+  }
+
+  .tag-list {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tag-list li {
+    margin: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    letter-spacing: 0.025em;
+    color: var(--text-secondary-light);
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+  }
+
+  .tag:hover {
+    color: var(--text-primary-light);
+    border-color: var(--text-primary-light);
+    background: var(--accent-light);
+  }
+
+  body.dark .tag {
+    color: var(--text-secondary-dark);
+    border-color: var(--border-dark);
+  }
+
+  body.dark .tag:hover {
+    color: var(--text-primary-dark);
+    border-color: var(--text-primary-dark);
+    background: var(--accent-dark);
+  }
+
+  .tag:focus {
+    outline: 2px solid var(--link-light);
+    outline-offset: 2px;
+  }
+
+  body.dark .tag:focus {
+    outline-color: var(--link-dark);
+  }
+
+  /* Navigation */
+  .post-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg) 0;
+    margin-top: var(--space-xl);
+    border-top: 1px solid var(--border-light);
+  }
+
+  body.dark .post-navigation {
+    border-top-color: var(--border-dark);
+  }
+
+  .nav-link {
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary-light);
+  }
+
+  body.dark .nav-link {
+    color: var(--text-secondary-dark);
+  }
+
+  body.dark .nav-link:hover {
+    color: var(--text-primary-dark);
+  }
+
+  .nav-link:focus {
+    outline: 2px solid var(--link-light);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  body.dark .nav-link:focus {
+    outline-color: var(--link-dark);
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .article-title {
+      font-size: var(--font-size-3xl);
+    }
+
+    .article-excerpt {
+      font-size: var(--font-size-lg);
+    }
+
+    .article-content :global(p) {
+      font-size: var(--font-size-base);
+      margin-bottom: var(--space-md);
+    }
+
+    .article-content :global(li) {
+      font-size: var(--font-size-base);
+    }
+
+    .article-content :global(h2) {
+      font-size: var(--font-size-2xl);
+      margin: var(--space-xl) 0 var(--space-sm) 0;
+    }
+
+    .article-content :global(h3) {
+      font-size: var(--font-size-xl);
+      margin: var(--space-lg) 0 var(--space-sm) 0;
+    }
+
+    .share-buttons {
+      gap: var(--space-xs);
+    }
+
+    .share-btn {
+      padding: var(--space-xs) var(--space-sm);
+      font-size: var(--font-size-sm);
+    }
+
+    .post-navigation {
+      flex-direction: column;
+      gap: var(--space-sm);
+      text-align: center;
+    }
+  }
+</style>

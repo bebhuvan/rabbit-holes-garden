@@ -1,0 +1,53 @@
+---
+title: "Sample Post with Link Previews"
+date: 2024-01-20
+excerpt: "Demonstrating how link previews and embeds work in our blog posts"
+tags: ["demo", "links", "embeds"]
+---
+
+import LinkPreview from '../../components/LinkPreview.astro';
+
+This is a sample post showing how different types of links and embeds are handled.
+
+## Regular Link Previews
+
+Here's a regular website link that will show as a preview:
+
+<LinkPreview 
+  url="https://www.nasa.gov" 
+  title="NASA Official Website"
+  description="Explore the universe and our home planet with the official NASA website"
+  image="https://www.nasa.gov/sites/default/files/thumbnails/image/nasa-logo-web-rgb.png"
+/>
+
+## YouTube Embeds
+
+Check out this fascinating video:
+
+<LinkPreview url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
+
+## Twitter/X Embeds
+
+Here's an interesting tweet:
+
+<LinkPreview url="https://twitter.com/nasa/status/1234567890123456789" />
+
+## GitHub Repository
+
+Cool open source project:
+
+<LinkPreview url="https://github.com/microsoft/vscode" />
+
+## Custom Quote
+
+<div class="quote">
+"The universe is not only stranger than we imagine, it is stranger than we can imagine." — J.B.S. Haldane
+</div>
+
+## Mixed Content
+
+Sometimes you have regular text mixed with links. Here's a regular link that should also get a preview card:
+
+<LinkPreview url="https://example.com" />
+
+And here's some more text to show how it flows naturally in the content.

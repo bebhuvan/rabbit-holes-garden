@@ -1,0 +1,256 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PostCard from '../components/PostCard.astro';
+
+const POSTS_PER_PAGE = 5;
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+
+const allPosts = await getCollection('posts');
+const sortedPosts = allPosts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const totalPosts = sortedPosts.length;
+const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+const endIndex = startIndex + POSTS_PER_PAGE;
+const posts = sortedPosts.slice(startIndex, endIndex);
+
+const hasPrevPage = currentPage > 1;
+const hasNextPage = currentPage < totalPages;
+const prevPageUrl = hasPrevPage ? (currentPage === 2 ? '/' : `/?page=${currentPage - 1}`) : null;
+const nextPageUrl = hasNextPage ? `/?page=${currentPage + 1}` : null;
+---
+
+<BaseLayout 
+    title="Home" 
+    description="Rabbit Holes - Beautiful things from across the internet. Curated discoveries that spark curiosity and offer new perspectives."
+  >
+  <div class="container">
+    <Header />
+    
+    <main id="main-content" class="posts-list">
+      <h1 class="visually-hidden">Latest Posts</h1>
+      {posts.map((post) => (
+        <PostCard post={post} />
+      ))}
+      
+      <!-- Pagination -->
+      <nav class="pagination" aria-label="Pagination Navigation">
+        <div class="pagination-info">
+          <span class="page-info">
+            Page {currentPage} of {totalPages} 
+            <span class="post-count">({totalPosts} posts)</span>
+          </span>
+        </div>
+        
+        <div class="pagination-controls">
+          {hasPrevPage && (
+            <a href={prevPageUrl} class="page-link prev" rel="prev">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15,18 9,12 15,6"></polyline>
+              </svg>
+              Previous
+            </a>
+          )}
+          
+          <div class="page-numbers">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+              const isCurrentPage = pageNum === currentPage;
+              const pageUrl = pageNum === 1 ? '/' : `/?page=${pageNum}`;
+              
+              return (
+                <a 
+                  href={pageUrl} 
+                  class={`page-number ${isCurrentPage ? 'current' : ''}`}
+                  aria-current={isCurrentPage ? 'page' : undefined}
+                >
+                  {pageNum}
+                </a>
+              );
+            })}
+          </div>
+          
+          {hasNextPage && (
+            <a href={nextPageUrl} class="page-link next" rel="next">
+              Next
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9,18 15,12 9,6"></polyline>
+              </svg>
+            </a>
+          )}
+        </div>
+      </nav>
+    </main>
+
+    <Footer />
+  </div>
+</BaseLayout>
+
+<style>
+  .posts-list {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .pagination {
+    max-width: 680px;
+    margin: 48px auto 0;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  body.dark .pagination {
+    border-top-color: var(--border-dark);
+  }
+
+  .pagination-info {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .page-info {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    font-weight: 500;
+  }
+
+  body.dark .page-info {
+    color: var(--text-secondary-dark);
+  }
+
+  .post-count {
+    color: var(--text-tertiary-light);
+    font-weight: 400;
+  }
+
+  body.dark .post-count {
+    color: var(--text-tertiary-dark);
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .page-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+  }
+
+  .page-link:hover {
+    color: var(--text-primary-light);
+    border-color: var(--text-primary-light);
+    background: var(--accent-light);
+  }
+
+  body.dark .page-link {
+    color: var(--text-secondary-dark);
+    border-color: var(--border-dark);
+  }
+
+  body.dark .page-link:hover {
+    color: var(--text-primary-dark);
+    border-color: var(--text-primary-dark);
+    background: var(--accent-dark);
+  }
+
+  .page-link:focus {
+    outline: 2px solid var(--link-light);
+    outline-offset: 2px;
+  }
+
+  body.dark .page-link:focus {
+    outline-color: var(--link-dark);
+  }
+
+  .page-numbers {
+    display: flex;
+    gap: 4px;
+  }
+
+  .page-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+  }
+
+  .page-number:hover {
+    color: var(--text-primary-light);
+    background: var(--accent-light);
+  }
+
+  .page-number.current {
+    color: white;
+    background: var(--link-light);
+    font-weight: 600;
+  }
+
+  body.dark .page-number {
+    color: var(--text-secondary-dark);
+  }
+
+  body.dark .page-number:hover {
+    color: var(--text-primary-dark);
+    background: var(--accent-dark);
+  }
+
+  body.dark .page-number.current {
+    color: var(--bg-dark);
+    background: var(--link-dark);
+  }
+
+  .page-number:focus {
+    outline: 2px solid var(--link-light);
+    outline-offset: 2px;
+  }
+
+  body.dark .page-number:focus {
+    outline-color: var(--link-dark);
+  }
+
+  @media (max-width: 768px) {
+    .pagination-controls {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .page-link {
+      order: 2;
+    }
+
+    .page-numbers {
+      order: 1;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .page-link.prev {
+      align-self: flex-start;
+    }
+
+    .page-link.next {
+      align-self: flex-end;
+    }
+  }
+</style>
