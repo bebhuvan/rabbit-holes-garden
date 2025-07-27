@@ -1,0 +1,102 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="About | Rabbit Holes" description="Learn more about Rabbit Holes - a space for curious minds">
+  <div class="container">
+    <Header />
+    
+    <main>
+      <article class="single-post">
+        <header class="post-header">
+          <h1 class="post-title">
+            About Rabbit Holes
+          </h1>
+        </header>
+        
+        <div class="post-content">
+          <p>Rabbit Holes is a curated collection of beautiful discoveries from across the internet—a space where curiosity leads to genuine understanding rather than quick consumption.</p>
+          
+          <blockquote>
+            "The important thing is not to stop questioning. Curiosity has its own reason for existing."
+            <cite>— Albert Einstein</cite>
+          </blockquote>
+          
+          <p>In our age of information overload, finding signal in the noise becomes more valuable than ever. This site is an experiment in thoughtful curation—choosing quality over quantity, depth over speed, understanding over opinion.</p>
+          
+          <h2>What You'll Find Here</h2>
+          
+          <p>Each post is carefully selected for its ability to expand understanding:</p>
+          
+          <ul>
+            <li><strong>Visualizations</strong> that reveal hidden patterns</li>
+            <li><strong>Research</strong> that shifts perspectives</li>
+            <li><strong>Art</strong> that captures the ineffable</li>
+            <li><strong>Ideas</strong> that connect unexpected dots</li>
+            <li><strong>Tools</strong> that amplify human creativity</li>
+            <li><strong>Stories</strong> that remind us why wonder matters</li>
+          </ul>
+          
+          <h2>The Philosophy</h2>
+          
+          <p>This isn't breaking news or hot takes. It's the opposite: thoughtful exploration of ideas and creations that deserve more than a passing glance. We believe the internet's greatest gift isn't access to information—it's access to each other's curiosity and capacity for insight.</p>
+          
+          <blockquote>
+            "Wonder is the beginning of wisdom."
+            <cite>— Socrates</cite>
+          </blockquote>
+          
+          <p>Every rabbit hole begins with a simple question: "What if I looked a little deeper?" That's the spirit we're trying to capture here—the joy of discovery for its own sake.</p>
+          
+          <p>Welcome to the depths. 🐰</p>
+        </div>
+      </article>
+    </main>
+    
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .single-post {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 0 80px 0;
+  }
+  
+  .post-header {
+    margin-bottom: 48px;
+    text-align: center;
+  }
+  
+  .post-title {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  body.dark .post-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .post-content {
+    font-size: 19px;
+    line-height: 1.8;
+  }
+  
+  @media (max-width: 768px) {
+    .post-title {
+      font-size: 28px;
+    }
+    
+    .post-content {
+      font-size: 17px;
+    }
+  }
+</style>

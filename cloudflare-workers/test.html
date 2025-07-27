@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Publisher Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input, textarea, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #005a9f;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ff9999;
+            color: #d00;
+        }
+        .urls-container {
+            margin-bottom: 10px;
+        }
+        .url-input {
+            margin-bottom: 10px;
+        }
+        .add-url {
+            width: auto;
+            background: #28a745;
+            margin-bottom: 10px;
+        }
+        .add-url:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐰 Rabbit Holes AI Publisher Test</h1>
+    <p>Test the AI publisher locally. Note: This will fail without a real OpenAI API key.</p>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="workerUrl">Worker URL:</label>
+            <input type="text" id="workerUrl" value="http://localhost:42317" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="type">Post Type:</label>
+            <select id="type">
+                <option value="single-post">Single Post</option>
+                <option value="link-roundup">Link Roundup</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>URLs (1-10):</label>
+            <div id="urlsContainer" class="urls-container">
+                <input type="url" class="url-input" placeholder="https://example.com" required>
+            </div>
+            <button type="button" class="add-url" onclick="addUrlInput()">+ Add URL</button>
+        </div>
+        
+        <button type="submit" id="submitBtn">Generate Content</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        let urlCount = 1;
+        
+        function addUrlInput() {
+            if (urlCount >= 10) {
+                alert('Maximum 10 URLs allowed');
+                return;
+            }
+            
+            const container = document.getElementById('urlsContainer');
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.className = 'url-input';
+            input.placeholder = 'https://example.com';
+            container.appendChild(input);
+            urlCount++;
+        }
+        
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Generating...';
+            resultDiv.innerHTML = '';
+            
+            try {
+                const workerUrl = document.getElementById('workerUrl').value;
+                const type = document.getElementById('type').value;
+                const urlInputs = document.querySelectorAll('.url-input');
+                const urls = Array.from(urlInputs)
+                    .map(input => input.value.trim())
+                    .filter(url => url);
+                
+                if (urls.length === 0) {
+                    throw new Error('Please provide at least one URL');
+                }
+                
+                const response = await fetch(workerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ urls, type })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                resultDiv.innerHTML = `
+                    <h3>✅ Success!</h3>
+                    <h4>Generated Content:</h4>
+                    <div style="background: white; padding: 15px; border: 1px solid #ddd; margin: 10px 0;">
+                        ${data.content.replace(/\n/g, '<br>')}
+                    </div>
+                    <h4>Metadata:</h4>
+                    <pre>${JSON.stringify(data.metadata, null, 2)}</pre>
+                    <p><strong>Processed URLs:</strong> ${data.processedUrls}</p>
+                    ${data.failedUrls.length > 0 ? `<p><strong>Failed URLs:</strong> ${data.failedUrls.length}</p>` : ''}
+                `;
+                resultDiv.className = 'result';
+                
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Generate Content';
+            }
+        });
+        
+        // Test connection
+        async function testConnection() {
+            try {
+                const response = await fetch('http://localhost:42317', {
+                    method: 'OPTIONS'
+                });
+                console.log('Worker is running and responding to CORS preflight');
+            } catch (error) {
+                console.error('Worker not accessible:', error.message);
+            }
+        }
+        
+        testConnection();
+    </script>
+</body>
+</html>

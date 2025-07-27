@@ -1,0 +1,181 @@
+media:
+  input: public/images
+  output: /images
+
+content:
+  - name: posts
+    label: Posts
+    type: collection
+    path: src/content/posts
+    extension: md
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+        hint: The post title
+
+      - name: date
+        label: Date
+        type: datetime
+        required: true
+        default: now
+        hint: Publication date
+
+      - name: excerpt
+        label: Excerpt
+        type: text
+        required: true
+        hint: Short description of the post (used in previews and meta tags)
+
+      - name: tags
+        label: Tags
+        type: list
+        items:
+          type: string
+        required: true
+        hint: Tags for categorizing the post
+
+      - name: post_type
+        label: Post Type
+        type: select
+        required: true
+        options:
+          - value: discovery
+            label: Discovery
+          - value: thought
+            label: Thought
+          - value: link
+            label: Link
+          - value: observation
+            label: Observation
+        default: discovery
+        hint: Type of post content
+
+      - name: author
+        label: Author
+        type: string
+        required: false
+        default: Bhuvanesh
+        hint: Post author
+
+      - name: link
+        label: External Link
+        type: string
+        required: false
+        hint: External link related to this post (optional)
+
+      - name: draft
+        label: Draft
+        type: boolean
+        required: false
+        default: false
+        hint: Mark as draft to hide from public
+
+      - name: source
+        label: Source
+        type: string
+        required: false
+        hint: Source of the discovery (optional)
+
+      - name: discovery_context
+        label: Discovery Context
+        type: text
+        required: false
+        hint: How this was discovered (optional)
+
+      - name: body
+        label: Content
+        type: rich-text
+        required: true
+        hint: The main content of the post
+
+  - name: settings
+    label: Site Settings
+    type: file
+    path: src/site-settings.json
+    fields:
+      - name: title
+        label: Site Title
+        type: string
+        default: "Rabbit Holes"
+
+      - name: description
+        label: Site Description
+        type: text
+        default: "Discover. Dive deep. Get lost in beautiful distractions."
+
+      - name: url
+        label: Site URL
+        type: string
+        default: "https://rabbitholes.garden"
+
+      - name: author
+        label: Default Author
+        type: string
+        default: "Bhuvanesh"
+
+      - name: social
+        label: Social Links
+        type: object
+        fields:
+          - name: twitter
+            label: Twitter
+            type: string
+          - name: github
+            label: GitHub
+            type: string
+
+components:
+  - name: embed
+    label: Embed
+    fields:
+      - name: url
+        label: URL
+        type: string
+        required: true
+        hint: URL of the content to embed
+
+      - name: type
+        label: Embed Type
+        type: select
+        required: true
+        options:
+          - value: youtube
+            label: YouTube
+          - value: twitter
+            label: Twitter
+          - value: codepen
+            label: CodePen
+          - value: gist
+            label: GitHub Gist
+        hint: Type of embed
+
+      - name: title
+        label: Title
+        type: string
+        required: false
+        hint: Optional title for the embed
+
+  - name: link_preview
+    label: Link Preview
+    fields:
+      - name: url
+        label: URL
+        type: string
+        required: true
+
+      - name: title
+        label: Title
+        type: string
+        required: true
+
+      - name: description
+        label: Description
+        type: text
+        required: false
+
+      - name: image
+        label: Preview Image
+        type: image
+        required: false

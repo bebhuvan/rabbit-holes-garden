@@ -1,16 +1,353 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
 
+// Get all posts, sorted by date (newest first)
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+allPosts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// Get current page from URL params
+const currentPage = Number(Astro.url.searchParams.get('page')) || 1;
+const postsPerPage = 10;
+
+// Calculate pagination
+const totalPosts = allPosts.length;
+const totalPages = Math.ceil(totalPosts / postsPerPage);
+const startIndex = (currentPage - 1) * postsPerPage;
+const endIndex = startIndex + postsPerPage;
+const posts = allPosts.slice(startIndex, endIndex);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Rabbit Holes - Discover. Dive deep. Get lost in beautiful distractions.">
+  <div class="container">
+    <Header />
+    
+    <main>
+      <div class="posts-feed">
+        {posts.map(async (post) => {
+          const { Content } = await post.render();
+          const wordCount = post.body.split(/\s+/).length;
+          const isShortPost = wordCount < 500; // Posts under 500 words show in full
+          
+          return (
+            <article class="post-preview">
+              <header class="post-header">
+                <h2 class="post-title">
+                  <a href={`/posts/${post.slug}`}>
+                    {post.data.title}
+                  </a>
+                </h2>
+                <div class="post-meta">
+                  <time datetime={post.data.date.toISOString()}>
+                    {new Intl.DateTimeFormat('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    }).format(post.data.date)}
+                  </time>
+                  {post.data.author && (
+                    <span> by {post.data.author}</span>
+                  )}
+                </div>
+              </header>
+              
+              <div class="post-content">
+                {isShortPost ? (
+                  <Content />
+                ) : (
+                  <div>
+                    <p>{post.data.excerpt}</p>
+                    <a href={`/posts/${post.slug}`} class="read-more">
+                      Read more →
+                    </a>
+                  </div>
+                )}
+              </div>
+              
+              <footer class="post-footer">
+                <div class="post-tags">
+                  {post.data.tags.map((tag) => (
+                    <a href={`/tags/${tag}`} class="tag">
+                      #{tag}
+                    </a>
+                  ))}
+                </div>
+                <div class="post-actions">
+                  <button 
+                    class="share-btn" 
+                    onclick={`copyLink('${post.slug}')`}
+                  >
+                    Share
+                  </button>
+                  {post.data.link && (
+                    <a 
+                      href={post.data.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      class="visit-link"
+                    >
+                      Visit Link →
+                    </a>
+                  )}
+                </div>
+              </footer>
+            </article>
+          );
+        })}
+      </div>
+      
+      {totalPages > 1 && (
+        <nav class="pagination" aria-label="Pagination">
+          <div class="pagination-info">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div class="pagination-links">
+            {currentPage > 1 && (
+              <a 
+                href={currentPage === 2 ? '/' : `/?page=${currentPage - 1}`} 
+                class="pagination-link"
+              >
+                ← Previous
+              </a>
+            )}
+            {currentPage < totalPages && (
+              <a 
+                href={`/?page=${currentPage + 1}`} 
+                class="pagination-link"
+              >
+                Next →
+              </a>
+            )}
+          </div>
+        </nav>
+      )}
+    </main>
+    
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .posts-feed {
+    margin-bottom: 80px;
+  }
+  
+  .post-preview {
+    margin-bottom: 80px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .post-preview:last-child {
+    border-bottom: none;
+  }
+  
+  body.dark .post-preview {
+    border-bottom-color: var(--border-dark);
+  }
+  
+  .post-header {
+    margin-bottom: 24px;
+  }
+  
+  .post-title {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  .post-title a {
+    color: var(--text-primary-light);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .post-title a:hover {
+    color: var(--accent-orange);
+  }
+  
+  body.dark .post-title a {
+    color: var(--text-primary-dark);
+  }
+  
+  .post-meta {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  
+  body.dark .post-meta {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .post-content {
+    font-size: 20px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    font-family: 'Crimson Pro', Georgia, serif;
+  }
+  
+  .read-more {
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+    transition: color 0.2s ease;
+  }
+  
+  .read-more:hover {
+    color: var(--accent-orange-hover);
+  }
+  
+  .post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .post-tags {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .tag {
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+    padding: 8px 6px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .tag:hover {
+    color: var(--text-primary-light);
+  }
+  
+  body.dark .tag {
+    color: var(--text-secondary-dark);
+  }
+  
+  body.dark .tag:hover {
+    color: var(--text-primary-dark);
+  }
+  
+  .post-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .share-btn {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary-light);
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .share-btn:hover {
+    background: var(--accent-light);
+    color: var(--text-primary-light);
+  }
+  
+  .visit-link {
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+  }
+  
+  .visit-link:hover {
+    color: var(--accent-orange-hover);
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 0;
+    border-top: 1px solid var(--border-light);
+    margin-top: 40px;
+  }
+  
+  body.dark .pagination {
+    border-top-color: var(--border-dark);
+  }
+  
+  .pagination-info {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+  }
+  
+  body.dark .pagination-info {
+    color: var(--text-secondary-dark);
+  }
+  
+  .pagination-links {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .pagination-link {
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 12px 20px;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .pagination-link:hover {
+    background: var(--accent-light);
+  }
+  
+  @media (max-width: 768px) {
+    .post-content {
+      font-size: 18px;
+    }
+    
+    .post-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .pagination {
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
+</style>

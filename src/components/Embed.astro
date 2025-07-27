@@ -1,0 +1,195 @@
+---
+interface Props {
+  type: 'youtube' | 'twitter' | 'codepen' | 'github-gist';
+  url: string;
+  title?: string;
+  height?: string;
+}
+
+const { type, url, title, height = 'auto' } = Astro.props;
+
+// Extract ID from URLs
+function extractId(url: string, type: string): string | null {
+  switch (type) {
+    case 'youtube':
+      const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+      return ytMatch ? ytMatch[1] : null;
+    
+    case 'twitter':
+      const twitterMatch = url.match(/twitter\.com\/\w+\/status\/(\d+)/);
+      return twitterMatch ? twitterMatch[1] : null;
+    
+    case 'codepen':
+      const codepenMatch = url.match(/codepen\.io\/([^\/]+)\/pen\/([^\/\?]+)/);
+      return codepenMatch ? `${codepenMatch[1]}/${codepenMatch[2]}` : null;
+    
+    case 'github-gist':
+      const gistMatch = url.match(/gist\.github\.com\/(?:[^\/]+\/)?([a-f0-9]+)/);
+      return gistMatch ? gistMatch[1] : null;
+    
+    default:
+      return null;
+  }
+}
+
+const embedId = extractId(url, type);
+
+// YouTube embed
+const youtubeEmbed = embedId && type === 'youtube' ? `https://www.youtube.com/embed/${embedId}` : null;
+
+// Twitter embed (using oEmbed)
+const twitterEmbed = embedId && type === 'twitter' ? url : null;
+
+// CodePen embed  
+const codepenEmbed = embedId && type === 'codepen' ? `https://codepen.io/${embedId}/embed/` : null;
+
+// GitHub Gist embed
+const gistEmbed = embedId && type === 'github-gist' ? `https://gist.github.com/${embedId}.js` : null;
+---
+
+<div class="embed-container" data-embed-type={type}>
+  {youtubeEmbed && (
+    <div class="youtube-embed">
+      <iframe
+        src={youtubeEmbed}
+        title={title || "YouTube video"}
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+    </div>
+  )}
+  
+  {twitterEmbed && (
+    <div class="twitter-embed">
+      <blockquote class="twitter-tweet" data-theme="light">
+        <a href={twitterEmbed}>Loading tweet...</a>
+      </blockquote>
+    </div>
+  )}
+  
+  {codepenEmbed && (
+    <div class="codepen-embed">
+      <iframe
+        src={codepenEmbed}
+        title={title || "CodePen"}
+        frameborder="0"
+        loading="lazy"
+        allowfullscreen
+      ></iframe>
+    </div>
+  )}
+  
+  {gistEmbed && (
+    <div class="gist-embed">
+      <script src={gistEmbed}></script>
+      <noscript>
+        <a href={`https://gist.github.com/${embedId}`} target="_blank" rel="noopener noreferrer">
+          View this gist on GitHub
+        </a>
+      </noscript>
+    </div>
+  )}
+  
+  {!embedId && (
+    <div class="embed-error">
+      <p>Unable to embed content from: <a href={url} target="_blank" rel="noopener noreferrer">{url}</a></p>
+    </div>
+  )}
+</div>
+
+<style>
+  .embed-container {
+    margin: 32px 0;
+    border: 1px solid var(--border-light);
+    background: var(--accent-light);
+    overflow: hidden;
+  }
+  
+  body.dark .embed-container {
+    border-color: var(--border-dark);
+    background: var(--accent-dark);
+  }
+  
+  .youtube-embed {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  }
+  
+  .youtube-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .twitter-embed {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .twitter-embed .twitter-tweet {
+    margin: 0 !important;
+  }
+  
+  .codepen-embed {
+    height: 400px;
+  }
+  
+  .codepen-embed iframe {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .gist-embed {
+    overflow-x: auto;
+  }
+  
+  .gist-embed .gist {
+    border: none !important;
+    margin: 0 !important;
+  }
+  
+  .gist-embed .gist .gist-file {
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  
+  .embed-error {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-secondary-light);
+  }
+  
+  body.dark .embed-error {
+    color: var(--text-secondary-dark);
+  }
+  
+  .embed-error a {
+    color: var(--accent-orange);
+    text-decoration: none;
+  }
+  
+  .embed-error a:hover {
+    text-decoration: underline;
+  }
+  
+  @media (max-width: 768px) {
+    .embed-container {
+      margin: 24px -24px;
+    }
+    
+    .codepen-embed {
+      height: 300px;
+    }
+  }
+</style>
+
+{twitterEmbed && (
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+)}

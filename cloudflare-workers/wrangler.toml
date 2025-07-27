@@ -1,0 +1,19 @@
+name = "rabbit-holes-ai-publisher"
+main = "ai-publisher.js"
+compatibility_date = "2023-05-18"
+
+[vars]
+# For local development - set a dummy key
+OPENAI_API_KEY = "sk-dummy-key-for-local-testing"
+
+[env.production]
+name = "rabbit-holes-ai-publisher"
+
+[env.production.vars]
+# Set these in Cloudflare Workers dashboard
+# OPENAI_API_KEY = "your-openai-api-key"
+
+[[env.production.kv_namespaces]]
+binding = "POSTS_KV"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"

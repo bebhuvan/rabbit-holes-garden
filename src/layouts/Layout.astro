@@ -1,0 +1,303 @@
+---
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { title, description = "Discover. Dive deep. Get lost in beautiful distractions.", image } = Astro.props;
+const siteUrl = Astro.site || 'http://localhost:4322';
+const socialImage = image || `${siteUrl}/og-image.png`;
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
+
+// JSON-LD structured data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Rabbit Holes",
+  "description": "Discover. Dive deep. Get lost in beautiful distractions.",
+  "url": siteUrl,
+  "author": {
+    "@type": "Person",
+    "name": "Bhuvanesh",
+    "url": siteUrl
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Rabbit Holes",
+    "url": siteUrl
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": `${siteUrl}/search?q={search_term_string}`
+    },
+    "query-input": "required name=search_term_string"
+  }
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#f97316" />
+    <meta name="msapplication-TileColor" content="#f97316" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Rabbit Holes" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalUrl} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={socialImage} />
+    <meta property="twitter:creator" content="@bhuvanesh" />
+    <meta property="twitter:site" content="@bhuvanesh" />
+    
+    <!-- Additional Meta -->
+    <meta name="author" content="Bhuvanesh" />
+    <link rel="canonical" href={canonicalUrl} />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f97316" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Rabbit Holes" />
+    
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="Rabbit Holes RSS Feed" href="/rss.xml" />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+  </head>
+  <body>
+    <slot />
+    
+    <script>
+      // Theme management
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+      }
+      
+      // Theme toggle function
+      window.toggleTheme = function() {
+        const body = document.body;
+        const button = document.querySelector('.theme-toggle');
+        const icon = button?.querySelector('.theme-icon');
+        const text = button?.querySelector('.theme-text');
+        
+        body.classList.toggle('dark');
+        
+        if (body.classList.contains('dark')) {
+          if (icon) icon.textContent = '☀️';
+          if (text) text.textContent = 'Light';
+          localStorage.setItem('theme', 'dark');
+        } else {
+          if (icon) icon.textContent = '🌙';
+          if (text) text.textContent = 'Dark';
+          localStorage.setItem('theme', 'light');
+        }
+      };
+      
+      // Share functionality
+      window.copyLink = function(postId) {
+        const url = `${window.location.origin}/posts/${postId}`;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            showCopySuccess(postId);
+          }).catch(err => {
+            console.log('Clipboard API failed, using fallback:', err);
+            fallbackCopyToClipboard(url, postId);
+          });
+        } else {
+          fallbackCopyToClipboard(url, postId);
+        }
+      };
+      
+      function showCopySuccess(postId) {
+        const successMsg = document.getElementById(`copy-success-${postId}`) || 
+                         document.getElementById('copy-success-full');
+        if (successMsg) {
+          successMsg.classList.add('show');
+          setTimeout(() => successMsg.classList.remove('show'), 2000);
+        }
+      }
+      
+      function fallbackCopyToClipboard(text, postId) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            showCopySuccess(postId);
+          }
+        } catch (err) {
+          console.log('Fallback copy failed:', err);
+        }
+        
+        document.body.removeChild(textArea);
+      }
+      
+      window.sharePost = function(postId) {
+        if (navigator.share && navigator.canShare) {
+          const shareData = {
+            title: 'Rabbit Holes',
+            url: `${window.location.origin}/posts/${postId}`
+          };
+          
+          if (navigator.canShare(shareData)) {
+            navigator.share(shareData).catch(err => {
+              console.log('Share failed:', err);
+              window.copyLink(postId);
+            });
+          } else {
+            window.copyLink(postId);
+          }
+        } else {
+          window.copyLink(postId);
+        }
+      };
+      
+      // Surprise me functionality
+      window.surpriseMe = async function() {
+        try {
+          // Load all posts
+          const response = await fetch('/search-data.json');
+          const posts = await response.json();
+          
+          if (posts.length > 0) {
+            const randomPost = posts[Math.floor(Math.random() * posts.length)];
+            window.location.href = `/posts/${randomPost.slug}`;
+          } else {
+            // Fallback
+            window.location.href = '/posts/the-sacred-act-of-curiosity';
+          }
+        } catch (error) {
+          console.error('Failed to load posts for surprise:', error);
+          // Fallback
+          window.location.href = '/posts/the-sacred-act-of-curiosity';
+        }
+      };
+      
+      // PWA Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registered');
+            })
+            .catch(err => {
+              console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+      }
+      
+      // Minimal PWA Install Prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show a subtle install hint after user has visited a few pages
+        const pageViews = parseInt(localStorage.getItem('pageViews') || '0') + 1;
+        localStorage.setItem('pageViews', pageViews.toString());
+        
+        if (pageViews >= 3 && !localStorage.getItem('pwaPromptShown')) {
+          setTimeout(() => {
+            showInstallHint();
+          }, 5000); // Show after 5 seconds
+        }
+      });
+      
+      function showInstallHint() {
+        if (localStorage.getItem('pwaPromptDismissed')) return;
+        
+        const hint = document.createElement('div');
+        hint.id = 'pwa-install-hint';
+        hint.innerHTML = `
+          <div class="pwa-hint-content">
+            <span class="pwa-hint-text">🐰 Install Rabbit Holes for quick access</span>
+            <button class="pwa-hint-install" onclick="installPWA()">Install</button>
+            <button class="pwa-hint-dismiss" onclick="dismissPWA()">×</button>
+          </div>
+        `;
+        document.body.appendChild(hint);
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          if (document.getElementById('pwa-install-hint')) {
+            dismissPWA();
+          }
+        }, 10000);
+      }
+      
+      window.installPWA = function() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('PWA installed');
+            }
+            deferredPrompt = null;
+            dismissPWA();
+          });
+        }
+      };
+      
+      window.dismissPWA = function() {
+        const hint = document.getElementById('pwa-install-hint');
+        if (hint) {
+          hint.remove();
+        }
+        localStorage.setItem('pwaPromptDismissed', 'true');
+        localStorage.setItem('pwaPromptShown', 'true');
+      };
+      
+      // Load Twitter widgets if needed
+      if (document.querySelector('.twitter-tweet')) {
+        const script = document.createElement('script');
+        script.src = 'https://platform.twitter.com/widgets.js';
+        script.async = true;
+        script.charset = 'utf-8';
+        document.head.appendChild(script);
+      }
+    </script>
+  </body>
+</html>

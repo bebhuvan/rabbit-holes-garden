@@ -1,0 +1,348 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Search | Rabbit Holes" description="Search through all posts and discoveries">
+  <div class="container">
+    <Header />
+    
+    <main>
+      <header class="search-header">
+        <h1 class="search-title">Search</h1>
+        <p class="search-description">
+          Find posts by title, content, or tags. Search is case-insensitive.
+        </p>
+      </header>
+      
+      <div class="search-form">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Search posts..."
+          class="search-input"
+        />
+        <div class="search-stats" id="search-stats"></div>
+      </div>
+      
+      <div class="search-results" id="search-results">
+        <div class="search-placeholder">
+          <p>Start typing to search through all posts...</p>
+        </div>
+      </div>
+    </main>
+    
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  // Simple client-side search functionality
+  let allPosts: any[] = [];
+  
+  // Load posts data
+  async function loadPosts() {
+    try {
+      const response = await fetch('/search-data.json');
+      const data = await response.json();
+      allPosts = data;
+      console.log('Posts loaded:', allPosts.length);
+    } catch (error) {
+      console.error('Failed to load posts:', error);
+      const resultsContainer = document.getElementById('search-results');
+      if (resultsContainer) {
+        resultsContainer.innerHTML = `
+          <div class="search-error">
+            <p>Failed to load search data. Please try refreshing the page.</p>
+          </div>
+        `;
+      }
+    }
+  }
+  
+  function performSearch(query: string) {
+    const results = allPosts.filter(post => 
+      post.title.toLowerCase().includes(query.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(query.toLowerCase()) ||
+      post.tags.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase()))
+    );
+    
+    displayResults(results, query);
+  }
+  
+  function displayResults(results: any[], query: string) {
+    const resultsContainer = document.getElementById('search-results');
+    const statsContainer = document.getElementById('search-stats');
+    
+    if (!resultsContainer || !statsContainer) return;
+    
+    if (query.trim() === '') {
+      resultsContainer.innerHTML = `
+        <div class="search-placeholder">
+          <p>Start typing to search through all posts...</p>
+        </div>
+      `;
+      statsContainer.textContent = '';
+      return;
+    }
+    
+    statsContainer.textContent = `${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"`;
+    
+    if (results.length === 0) {
+      resultsContainer.innerHTML = `
+        <div class="no-results">
+          <p>No posts found for "${query}"</p>
+          <p>Try searching with different keywords or check for typos.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    resultsContainer.innerHTML = results.map(post => `
+      <article class="search-result">
+        <h3 class="result-title">
+          <a href="/posts/${post.slug}">${post.title}</a>
+        </h3>
+        <p class="result-excerpt">${post.excerpt}</p>
+        <div class="result-meta">
+          <time class="result-date">${new Date(post.date).toLocaleDateString()}</time>
+          <div class="result-tags">
+            ${post.tags.map((tag: string) => `<span class="tag">#${tag}</span>`).join('')}
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+  
+  // Initialize search
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search-input') as HTMLInputElement;
+    
+    if (searchInput) {
+      let searchTimeout: NodeJS.Timeout;
+      
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = (e.target as HTMLInputElement).value;
+        
+        searchTimeout = setTimeout(() => {
+          performSearch(query);
+        }, 300);
+      });
+    }
+    
+    loadPosts();
+  });
+</script>
+
+<style>
+  .search-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  
+  .search-title {
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  body.dark .search-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .search-description {
+    font-size: 16px;
+    color: var(--text-secondary-light);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  
+  body.dark .search-description {
+    color: var(--text-secondary-dark);
+  }
+  
+  .search-form {
+    margin-bottom: 40px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 16px;
+    border: 2px solid var(--border-light);
+    border-radius: 0;
+    background: var(--bg-light);
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+    transition: border-color 0.2s ease;
+    min-height: 48px;
+  }
+  
+  .search-input:focus {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+    border-color: var(--accent-orange);
+  }
+  
+  body.dark .search-input {
+    border-color: var(--border-dark);
+    background: var(--bg-dark);
+    color: var(--text-primary-dark);
+  }
+  
+  .search-stats {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary-light);
+  }
+  
+  body.dark .search-stats {
+    color: var(--text-secondary-dark);
+  }
+  
+  .search-results {
+    min-height: 200px;
+  }
+  
+  .search-placeholder,
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary-light);
+  }
+  
+  body.dark .search-placeholder,
+  body.dark .no-results {
+    color: var(--text-secondary-dark);
+  }
+  
+  .search-error {
+    text-align: center;
+    padding: 60px 20px;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+  }
+  
+  body.dark .search-error {
+    background: #450a0a;
+    border-color: #991b1b;
+    color: #fca5a5;
+  }
+  
+  .search-result {
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    background: var(--accent-light);
+    margin-bottom: 16px;
+    transition: background 0.2s ease;
+  }
+  
+  .search-result:hover {
+    background: var(--bg-light);
+  }
+  
+  body.dark .search-result {
+    border-color: var(--border-dark);
+    background: var(--accent-dark);
+  }
+  
+  body.dark .search-result:hover {
+    background: var(--bg-dark);
+  }
+  
+  .result-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  .result-title a {
+    color: var(--text-primary-light);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .result-title a:hover {
+    color: var(--accent-orange);
+  }
+  
+  body.dark .result-title a {
+    color: var(--text-primary-dark);
+  }
+  
+  /* Override any default link colors */
+  .search-result a {
+    color: inherit;
+  }
+  
+  .search-result a:visited {
+    color: inherit;
+  }
+  
+  .result-excerpt {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  
+  body.dark .result-excerpt {
+    color: var(--text-secondary-dark);
+  }
+  
+  .result-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .result-date {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  
+  body.dark .result-date {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .result-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .tag {
+    color: var(--text-tertiary-light);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  body.dark .tag {
+    color: var(--text-tertiary-dark);
+  }
+  
+  @media (max-width: 768px) {
+    .search-title {
+      font-size: 28px;
+    }
+    
+    .result-meta {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

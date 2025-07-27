@@ -1,0 +1,268 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+const { pathname } = Astro.url;
+---
+
+<header class="header">
+  <h1 class="site-title">
+    <a href="/">
+      🐰 Rabbit Holes
+    </a>
+    <span class="pulse-dot"></span>
+  </h1>
+  
+  <p class="site-description">
+    Discover. Dive deep. Get lost in beautiful distractions.
+  </p>
+  
+  <nav>
+    <a 
+      href="/archive" 
+      class="nav-link"
+      class:list={{ 'active': pathname === '/archive' }}
+    >
+      Archive
+    </a>
+    <a 
+      href="/search" 
+      class="nav-link"
+      class:list={{ 'active': pathname === '/search' }}
+    >
+      Search
+    </a>
+    <a 
+      href="/tags" 
+      class="nav-link"
+      class:list={{ 'active': pathname === '/tags' }}
+    >
+      Tags
+    </a>
+    <button 
+      class="surprise-btn nav-link"
+      onclick="surpriseMe()"
+      aria-label="Surprise me with a random discovery"
+    >
+      ✨ Surprise
+    </button>
+    <a 
+      href="/about" 
+      class="nav-link"
+      class:list={{ 'active': pathname === '/about' }}
+    >
+      About
+    </a>
+    <a 
+      href="/rss.xml" 
+      class="nav-link"
+    >
+      RSS
+    </a>
+    <a 
+      href="/settings" 
+      class="nav-link"
+      class:list={{ 'active': pathname === '/settings' }}
+    >
+      ⚙️
+    </a>
+  </nav>
+  
+  <div class="theme-toggle-container">
+    <ThemeToggle />
+  </div>
+  
+  <div class="header-separator"></div>
+</header>
+
+<style>
+  .header {
+    padding: 80px 0 60px;
+    text-align: center;
+    margin-bottom: 80px;
+    position: relative;
+  }
+  
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 40px;
+    background: #e5e7eb;
+    opacity: 0.5;
+  }
+  
+  body.dark .header::after {
+    background: #374151;
+  }
+  
+  .site-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .site-title a {
+    color: #111827;
+    text-decoration: none;
+  }
+  
+  body.dark .site-title a {
+    color: #f9fafb;
+  }
+  
+  .pulse-dot {
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    width: 6px;
+    height: 6px;
+    background: #2563eb;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  
+  body.dark .pulse-dot {
+    background: #60a5fa;
+  }
+  
+  .site-description {
+    font-size: 15px;
+    color: #4b5563;
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 420px;
+    margin: 0 auto 40px;
+  }
+  
+  body.dark .site-description {
+    color: #d1d5db;
+  }
+  
+  .theme-toggle-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  
+  .nav-link {
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: relative;
+    font-family: 'Work Sans', sans-serif;
+    padding: 12px 8px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #111827;
+    transition: width 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    color: #111827;
+  }
+  
+  .nav-link:hover::after {
+    width: 100%;
+  }
+  
+  body.dark .nav-link {
+    color: #6b7280;
+  }
+  
+  body.dark .nav-link:hover {
+    color: #f9fafb;
+  }
+  
+  body.dark .nav-link::after {
+    background: #f9fafb;
+  }
+  
+  .surprise-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .surprise-btn:hover {
+    transform: scale(1.05);
+  }
+  
+  @media (max-width: 768px) {
+    .header {
+      padding: 60px 0 40px;
+      margin-bottom: 60px;
+    }
+    
+    .theme-toggle-container {
+      top: 20px;
+      right: 20px;
+    }
+    
+    nav {
+      gap: 20px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .header {
+      padding: 50px 0 30px;
+    }
+    
+    .theme-toggle-container {
+      top: 15px;
+      right: 15px;
+      z-index: 10;
+    }
+    
+    nav {
+      gap: 12px;
+    }
+    
+    .nav-link {
+      font-size: 11px;
+      padding: 12px 4px;
+    }
+    
+    .site-title {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    
+    .site-description {
+      font-size: 14px;
+      margin-bottom: 30px;
+      padding: 0 20px;
+    }
+  }
+</style>

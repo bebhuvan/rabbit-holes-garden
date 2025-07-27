@@ -1,0 +1,135 @@
+---
+---
+
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-quote">
+      <p>"The important thing is not to stop questioning. Curiosity has its own reason for existing."</p>
+      <cite>— Einstein</cite>
+    </div>
+    
+    <div class="footer-links">
+      <a href="/rss.xml" class="footer-link">RSS</a>
+      <a href="/archive" class="footer-link">Archive</a>
+      <a href="/about" class="footer-link">About</a>
+    </div>
+    
+    <div class="footer-meta">
+      <p>🐰 Built with curiosity and care</p>
+    </div>
+  </div>
+</footer>
+
+<style is:global>
+  .footer {
+    margin-top: 120px;
+    padding: 60px 0 40px;
+    border-top: 1px solid var(--border-light);
+  }
+  
+  body.dark .footer {
+    border-top-color: var(--border-dark);
+  }
+  
+  .footer-content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+  }
+  
+  .footer-quote {
+    margin-bottom: 40px;
+  }
+  
+  .footer-quote p {
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-secondary-light);
+    margin-bottom: 8px;
+    font-family: 'Crimson Pro', Georgia, serif;
+    position: relative;
+  }
+  
+  .footer-quote p::before {
+    content: """;
+    font-size: 48px;
+    color: var(--accent-orange);
+    position: absolute;
+    left: -20px;
+    top: -8px;
+    opacity: 0.3;
+    font-family: 'Crimson Pro', Georgia, serif;
+  }
+  
+  body.dark .footer-quote p {
+    color: var(--text-secondary-dark);
+  }
+  
+  .footer-quote cite {
+    font-size: 14px;
+    color: var(--text-tertiary-light);
+    font-style: normal;
+    font-weight: 500;
+  }
+  
+  body.dark .footer-quote cite {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  
+  .footer-link {
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+  }
+  
+  .footer-link:hover {
+    color: var(--text-primary-light);
+  }
+  
+  body.dark .footer-link {
+    color: var(--text-secondary-dark);
+  }
+  
+  body.dark .footer-link:hover {
+    color: var(--text-primary-dark);
+  }
+  
+  .footer-meta p {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    margin: 0;
+  }
+  
+  body.dark .footer-meta p {
+    color: var(--text-tertiary-dark);
+  }
+  
+  @media (max-width: 768px) {
+    .footer {
+      margin-top: 80px;
+      padding: 40px 0 32px;
+    }
+    
+    .footer-quote p {
+      font-size: 16px;
+    }
+    
+    .footer-links {
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+  }
+</style>

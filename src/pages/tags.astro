@@ -1,0 +1,279 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+// Get all posts to extract tags
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+
+// Create a map of tags to posts
+const tagMap = new Map<string, typeof allPosts>();
+
+allPosts.forEach(post => {
+  post.data.tags.forEach(tag => {
+    if (!tagMap.has(tag)) {
+      tagMap.set(tag, []);
+    }
+    tagMap.get(tag)!.push(post);
+  });
+});
+
+// Sort tags by post count (descending)
+const sortedTags = Array.from(tagMap.entries())
+  .map(([tag, posts]) => ({ tag, count: posts.length, posts }))
+  .sort((a, b) => b.count - a.count);
+---
+
+<Layout title="Tags | Rabbit Holes" description="Browse all tags and discover related posts">
+  <div class="container">
+    <Header />
+    
+    <main>
+      <header class="tags-header">
+        <h1 class="tags-title">All Tags</h1>
+        <p class="tags-description">
+          Explore {sortedTags.length} tags across {allPosts.length} posts. Click any tag to see related content.
+        </p>
+      </header>
+      
+      <div class="tags-cloud">
+        {sortedTags.map(({ tag, count }) => (
+          <a 
+            href={`/tags/${tag}`} 
+            class="tag-item"
+            style={`font-size: ${Math.min(24, 14 + count * 2)}px`}
+          >
+            #{tag}
+            <span class="tag-count">({count})</span>
+          </a>
+        ))}
+      </div>
+      
+      <section class="tags-list">
+        <h2 class="section-title">All Tags</h2>
+        <div class="tags-grid">
+          {sortedTags.map(({ tag, count, posts }) => (
+            <div class="tag-card">
+              <header class="tag-card-header">
+                <h3 class="tag-name">
+                  <a href={`/tags/${tag}`}>#{tag}</a>
+                </h3>
+                <span class="tag-count">{count} post{count !== 1 ? 's' : ''}</span>
+              </header>
+              
+              <div class="tag-posts">
+                {posts.slice(0, 3).map(post => (
+                  <a href={`/posts/${post.slug}`} class="tag-post">
+                    {post.data.title}
+                  </a>
+                ))}
+                {posts.length > 3 && (
+                  <a href={`/tags/${tag}`} class="view-all">
+                    +{posts.length - 3} more
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+    
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .tags-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  
+  .tags-title {
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  body.dark .tags-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .tags-description {
+    font-size: 16px;
+    color: var(--text-secondary-light);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  
+  body.dark .tags-description {
+    color: var(--text-secondary-dark);
+  }
+  
+  .tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 80px;
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  body.dark .tags-cloud {
+    border-bottom-color: var(--border-dark);
+  }
+  
+  .tag-item {
+    color: var(--text-primary-light);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    line-height: 1.2;
+  }
+  
+  .tag-item:hover {
+    color: var(--accent-orange);
+  }
+  
+  body.dark .tag-item {
+    color: var(--text-primary-dark);
+  }
+  
+  .tag-count {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  
+  body.dark .tag-count {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .section-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 32px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+    border-bottom: 2px solid var(--accent-orange);
+    padding-bottom: 8px;
+    display: inline-block;
+  }
+  
+  body.dark .section-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .tags-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  
+  .tag-card {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+  }
+  
+  .tag-card:hover {
+    opacity: 0.8;
+  }
+  
+  body.dark .tag-card {
+    border-bottom-color: var(--border-dark);
+  }
+  
+  .tag-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .tag-name {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  .tag-name a {
+    color: var(--text-primary-light);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .tag-name a:hover {
+    color: var(--accent-orange);
+  }
+  
+  body.dark .tag-name a {
+    color: var(--text-primary-dark);
+  }
+  
+  .tag-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .tag-post {
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: color 0.2s ease;
+  }
+  
+  .tag-post:hover {
+    color: var(--text-primary-light);
+  }
+  
+  body.dark .tag-post {
+    color: var(--text-secondary-dark);
+  }
+  
+  body.dark .tag-post:hover {
+    color: var(--text-primary-dark);
+  }
+  
+  .view-all {
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+  }
+  
+  .view-all:hover {
+    color: var(--accent-orange-hover);
+  }
+  
+  @media (max-width: 768px) {
+    .tags-title {
+      font-size: 28px;
+    }
+    
+    .tags-cloud {
+      padding: 24px;
+    }
+    
+    .tags-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .tag-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+</style>

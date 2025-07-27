@@ -1,0 +1,12 @@
+{
+  "name": "cloudflare-workers",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for generating AI-powered content from URLs, supporting up to 10 URLs for link roundups.",
+  "main": "ai-publisher.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

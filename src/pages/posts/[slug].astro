@@ -1,0 +1,564 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const { title, date, tags, embeds } = post.data;
+
+// Calculate reading time
+const wordCount = post.body.split(/\s+/).length;
+const readingTime = Math.ceil(wordCount / 200);
+
+// Format date
+const formattedDate = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+}).format(new Date(date));
+
+// Get related posts based on shared tags
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const relatedPosts = allPosts
+  .filter(p => p.slug !== post.slug) // Exclude current post
+  .map(p => ({
+    ...p,
+    sharedTags: p.data.tags.filter(tag => tags.includes(tag)).length
+  }))
+  .filter(p => p.sharedTags > 0) // Only posts with shared tags
+  .sort((a, b) => b.sharedTags - a.sharedTags) // Sort by most shared tags
+  .slice(0, 3); // Limit to 3 related posts
+
+// JSON-LD structured data for blog post
+const siteUrl = Astro.site || 'http://localhost:4322';
+const postUrl = `${siteUrl}/posts/${post.slug}`;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": title,
+  "description": post.data.excerpt,
+  "author": {
+    "@type": "Person",
+    "name": post.data.author || "Bhuvanesh"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Rabbit Holes",
+    "url": siteUrl
+  },
+  "datePublished": date.toISOString(),
+  "dateModified": date.toISOString(),
+  "url": postUrl,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": postUrl
+  },
+  "keywords": tags.join(", "),
+  "wordCount": wordCount,
+  "timeRequired": `PT${readingTime}M`,
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Rabbit Holes",
+    "@id": siteUrl
+  }
+};
+---
+
+<Layout title={`${title} | Rabbit Holes`} description={post.data.excerpt}>
+  <!-- JSON-LD for Blog Post -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+  
+  <div class="container">
+    <Header />
+    
+    <article class="single-post">
+      <header class="post-header">
+        <h1 class="post-title">
+          {title}
+        </h1>
+        <div class="post-meta">
+          {formattedDate} • {readingTime} min read
+          {post.data.author && <span> • by {post.data.author}</span>}
+        </div>
+      </header>
+      
+      <div class="post-content">
+        <Content />
+      </div>
+      
+      <div class="post-tags">
+        {tags.map((tag) => (
+          <a 
+            href={`/tags/${tag}`} 
+            class="tag"
+          >
+            #{tag}
+          </a>
+        ))}
+      </div>
+      
+      <div class="post-actions">
+        <button 
+          class="share-btn"
+          onclick={`copyLink('${post.slug}')`}
+        >
+          Copy Link
+        </button>
+        <button 
+          class="share-btn"
+          onclick={`sharePost('${post.slug}')`}
+        >
+          Share
+        </button>
+        <a 
+          href="/"
+          class="share-btn"
+        >
+          ← Back
+        </a>
+        <span class="copy-success" id={`copy-success-${post.slug}`}>
+          Copied!
+        </span>
+      </div>
+      
+      <!-- Related Posts -->
+      {relatedPosts.length > 0 && (
+        <section class="related-posts">
+          <h3 class="section-title">Related Discoveries</h3>
+          <div class="related-posts-grid">
+            {relatedPosts.map((relatedPost) => (
+              <article class="related-post">
+                <h4 class="related-post-title">
+                  <a href={`/posts/${relatedPost.slug}`}>
+                    {relatedPost.data.title}
+                  </a>
+                </h4>
+                <p class="related-post-excerpt">
+                  {relatedPost.data.excerpt}
+                </p>
+                <div class="related-post-tags">
+                  {relatedPost.data.tags
+                    .filter(tag => tags.includes(tag))
+                    .slice(0, 2)
+                    .map(tag => (
+                      <span class="related-tag">#{tag}</span>
+                    ))
+                  }
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Waline Comments -->
+      <div class="comments-section">
+        <h3 class="comments-title">Comments</h3>
+        <div id="waline-comments"></div>
+      </div>
+    </article>
+    
+    <Footer />
+  </div>
+</Layout>
+
+<!-- Waline CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/@waline/client@v3/dist/waline.css"
+/>
+
+<!-- Waline JavaScript -->
+<script type="module">
+  import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+
+  init({
+    el: '#waline-comments',
+    serverURL: 'https://rabbit-holes-comments.vercel.app',
+    path: window.location.pathname,
+    meta: ['nick', 'mail', 'link'],
+    requiredMeta: ['nick'],
+    placeholder: 'Share your thoughts about this discovery...',
+    avatar: 'retro',
+    avatarCDN: 'https://gravatar.loli.net/avatar/',
+    pageSize: 10,
+    lang: 'en',
+    locale: {
+      placeholder: 'Share your thoughts about this discovery...',
+      sofa: 'Be the first to comment!',
+      submit: 'Submit',
+      reply: 'Reply',
+      cancelReply: 'Cancel Reply',
+      comment: 'Comment',
+      refresh: 'Refresh',
+      more: 'Load More...',
+      preview: 'Preview',
+      emoji: 'Emoji',
+      uploadImage: 'Upload Image',
+      seconds: 'seconds ago',
+      minutes: 'minutes ago',
+      hours: 'hours ago',
+      days: 'days ago',
+      now: 'just now'
+    },
+    emoji: [
+      '//unpkg.com/@waline/emojis@1.2.0/weibo',
+      '//unpkg.com/@waline/emojis@1.2.0/alus',
+      '//unpkg.com/@waline/emojis@1.2.0/bilibili',
+      '//unpkg.com/@waline/emojis@1.2.0/qq',
+      '//unpkg.com/@waline/emojis@1.2.0/tieba'
+    ],
+    dark: 'auto',
+    imageUploader: false,
+    highlight: true,
+    mathml: false,
+    search: false,
+    pageview: true,
+    comment: true,
+    copyright: false
+  });
+</script>
+
+<style>
+  .single-post {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 0 80px 0;
+  }
+  
+  .post-header {
+    margin-bottom: 48px;
+    text-align: center;
+  }
+  
+  .post-title {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  body.dark .post-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .post-meta {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  
+  body.dark .post-meta {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .post-content {
+    font-size: 19px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+  }
+  
+  .post-tags {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    justify-content: center;
+  }
+  
+  .tag {
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+  }
+  
+  .tag:hover {
+    color: var(--text-primary-light);
+  }
+  
+  body.dark .tag {
+    color: var(--text-secondary-dark);
+  }
+  
+  body.dark .tag:hover {
+    color: var(--text-primary-dark);
+  }
+  
+  .post-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-light);
+    position: relative;
+  }
+  
+  body.dark .post-actions {
+    border-top-color: var(--border-dark);
+  }
+  
+  .share-btn {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary-light);
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+  }
+  
+  .share-btn:hover {
+    background: var(--accent-light);
+    color: var(--text-primary-light);
+  }
+  
+  body.dark .share-btn {
+    border-color: var(--border-dark);
+    color: var(--text-secondary-dark);
+  }
+  
+  body.dark .share-btn:hover {
+    background: var(--accent-dark);
+    color: var(--text-primary-dark);
+  }
+  
+  .copy-success {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .copy-success.show {
+    opacity: 1;
+  }
+  
+  body.dark .copy-success {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .related-posts {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border-light);
+  }
+  
+  body.dark .related-posts {
+    border-top-color: var(--border-dark);
+  }
+  
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+    text-align: center;
+  }
+  
+  body.dark .section-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .related-posts-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    margin-top: 24px;
+  }
+  
+  .related-post {
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-light);
+  }
+  
+  body.dark .related-post {
+    border-color: var(--border-dark);
+    background: var(--bg-dark);
+  }
+  
+  .related-post-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  .related-post-title a {
+    color: var(--text-primary-light);
+    text-decoration: none;
+  }
+  
+  .related-post-title a:hover {
+    color: var(--accent-orange);
+  }
+  
+  body.dark .related-post-title a {
+    color: var(--text-primary-dark);
+  }
+  
+  .related-post-excerpt {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  body.dark .related-post-excerpt {
+    color: var(--text-secondary-dark);
+  }
+  
+  .related-post-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .related-tag {
+    font-size: 11px;
+    color: var(--text-tertiary-light);
+    font-weight: 500;
+  }
+  
+  body.dark .related-tag {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .comments-section {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border-light);
+  }
+  
+  body.dark .comments-section {
+    border-top-color: var(--border-dark);
+  }
+  
+  .comments-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  body.dark .comments-title {
+    color: var(--text-primary-dark);
+  }
+  
+  /* Waline theme customization */
+  :global(.wl-container) {
+    font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+  
+  :global(.wl-editor) {
+    border-radius: 0 !important;
+    border: 1px solid var(--border-light) !important;
+    background: var(--bg-light) !important;
+  }
+  
+  body.dark :global(.wl-editor) {
+    border-color: var(--border-dark) !important;
+    background: var(--bg-dark) !important;
+    color: var(--text-primary-dark) !important;
+  }
+  
+  :global(.wl-btn) {
+    border-radius: 4px !important;
+    background: var(--accent-orange) !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  :global(.wl-btn:hover) {
+    background: var(--accent-orange-hover) !important;
+  }
+  
+  :global(.wl-card) {
+    border: 1px solid var(--border-light) !important;
+    border-radius: 0 !important;
+    background: var(--accent-light) !important;
+  }
+  
+  body.dark :global(.wl-card) {
+    border-color: var(--border-dark) !important;
+    background: var(--accent-dark) !important;
+  }
+  
+  :global(.wl-comment-content) {
+    color: var(--text-primary-light) !important;
+  }
+  
+  body.dark :global(.wl-comment-content) {
+    color: var(--text-primary-dark) !important;
+  }
+  
+  :global(.wl-meta) {
+    color: var(--text-secondary-light) !important;
+  }
+  
+  body.dark :global(.wl-meta) {
+    color: var(--text-secondary-dark) !important;
+  }
+  
+  @media (max-width: 768px) {
+    .post-title {
+      font-size: 28px;
+    }
+    
+    .post-content {
+      font-size: 17px;
+    }
+    
+    .post-actions {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .related-posts-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .related-post {
+      padding: 20px;
+    }
+  }
+</style>

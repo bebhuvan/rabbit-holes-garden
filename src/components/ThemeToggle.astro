@@ -1,0 +1,195 @@
+---
+// No props needed for this component
+---
+
+<button 
+  id="theme-toggle" 
+  class="theme-toggle" 
+  aria-label="Toggle theme"
+  title="Toggle dark/light theme"
+>
+  <span class="theme-icon light-icon">☀️</span>
+  <span class="theme-icon dark-icon">🌙</span>
+</button>
+
+<script>
+  const themeToggle = document.getElementById('theme-toggle');
+  const html = document.documentElement;
+  const body = document.body;
+  
+  // Get saved theme or default to system preference
+  function getInitialTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) return savedTheme;
+    
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  
+  // Apply theme
+  function applyTheme(theme: string) {
+    if (theme === 'dark') {
+      body.classList.add('dark');
+      html.style.colorScheme = 'dark';
+    } else {
+      body.classList.remove('dark');
+      html.style.colorScheme = 'light';
+    }
+    
+    // Update button state
+    if (themeToggle) {
+      themeToggle.setAttribute('data-theme', theme);
+    }
+  }
+  
+  // Toggle theme
+  function toggleTheme() {
+    const currentTheme = body.classList.contains('dark') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Announce theme change for screen readers
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.style.position = 'absolute';
+    announcement.style.left = '-10000px';
+    announcement.style.width = '1px';
+    announcement.style.height = '1px';
+    announcement.style.overflow = 'hidden';
+    announcement.textContent = `Theme changed to ${newTheme} mode`;
+    document.body.appendChild(announcement);
+    
+    setTimeout(() => {
+      document.body.removeChild(announcement);
+    }, 1000);
+  }
+  
+  // Initialize theme on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const initialTheme = getInitialTheme();
+    applyTheme(initialTheme);
+    
+    // Add click listener
+    if (themeToggle) {
+      themeToggle.addEventListener('click', toggleTheme);
+    }
+  });
+  
+  // Listen for system theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    // Only update if no manual theme preference is saved
+    if (!localStorage.getItem('theme')) {
+      applyTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+</script>
+
+<style>
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary-light);
+    padding: 8px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .theme-toggle:hover {
+    background: var(--accent-light);
+    color: var(--text-primary-light);
+    transform: scale(1.05);
+  }
+  
+  .theme-toggle:focus {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+  }
+  
+  body.dark .theme-toggle {
+    border-color: var(--border-dark);
+    color: var(--text-secondary-dark);
+  }
+  
+  body.dark .theme-toggle:hover {
+    background: var(--accent-dark);
+    color: var(--text-primary-dark);
+  }
+  
+  .theme-icon {
+    position: absolute;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+  }
+  
+  /* Light theme: show moon, hide sun */
+  .theme-toggle .light-icon {
+    opacity: 0;
+    transform: rotate(180deg) scale(0);
+  }
+  
+  .theme-toggle .dark-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+  
+  /* Dark theme: show sun, hide moon */
+  body.dark .theme-toggle .light-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+  
+  body.dark .theme-toggle .dark-icon {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0);
+  }
+  
+  /* Animation on theme change */
+  .theme-toggle.changing .theme-icon {
+    animation: themeSwitch 0.3s ease-in-out;
+  }
+  
+  @keyframes themeSwitch {
+    0% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(0.8) rotate(90deg); }
+    100% { transform: scale(1) rotate(180deg); }
+  }
+  
+  @media (max-width: 768px) {
+    .theme-toggle {
+      width: 44px;
+      height: 44px;
+      padding: 10px;
+    }
+    
+    .theme-icon {
+      font-size: 18px;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle,
+    .theme-icon {
+      transition: none;
+    }
+    
+    .theme-toggle:hover {
+      transform: none;
+    }
+    
+    @keyframes themeSwitch {
+      to { transform: scale(1) rotate(0deg); }
+    }
+  }
+</style>

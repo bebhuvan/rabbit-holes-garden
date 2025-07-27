@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Rabbit Holes</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    .offline-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .offline-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    
+    .offline-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #111827;
+    }
+    
+    .offline-message {
+      font-size: 16px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    
+    .retry-btn {
+      background: #ea580c;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .retry-btn:hover {
+      background: #dc2626;
+    }
+    
+    .home-link {
+      display: inline-block;
+      margin-top: 16px;
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    .home-link:hover {
+      color: #111827;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #111827;
+        color: #f9fafb;
+      }
+      
+      .offline-title {
+        color: #f9fafb;
+      }
+      
+      .offline-message {
+        color: #d1d5db;
+      }
+      
+      .home-link {
+        color: #9ca3af;
+      }
+      
+      .home-link:hover {
+        color: #f9fafb;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="offline-icon">🐰</div>
+    <h1 class="offline-title">You're Offline</h1>
+    <p class="offline-message">
+      It looks like you've lost your internet connection. Some content may not be available right now, but you can still browse cached pages.
+    </p>
+    <button class="retry-btn" onclick="window.location.reload()">
+      Try Again
+    </button>
+    <a href="/" class="home-link">← Back to Home</a>
+  </div>
+  
+  <script>
+    // Auto-retry when connection is restored
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+    
+    // Update UI based on connection status
+    function updateConnectionStatus() {
+      if (navigator.onLine) {
+        document.querySelector('.offline-message').textContent = 
+          'Connection restored! Refreshing page...';
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    }
+    
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+  </script>
+</body>
+</html>

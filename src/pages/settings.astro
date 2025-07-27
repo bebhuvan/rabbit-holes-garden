@@ -1,0 +1,495 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Settings | Rabbit Holes" description="Customize your Rabbit Holes experience">
+  <div class="container">
+    <Header />
+    
+    <main>
+      <header class="settings-header">
+        <h1 class="settings-title">Settings</h1>
+        <p class="settings-description">
+          Customize your reading experience and notification preferences.
+        </p>
+      </header>
+      
+      <div class="settings-content">
+        <section class="settings-section">
+          <h2 class="section-title">Appearance</h2>
+          <div class="setting-item">
+            <label for="theme-toggle" class="setting-label">
+              Theme
+            </label>
+            <div class="setting-control">
+              <select id="theme-toggle" class="theme-select">
+                <option value="auto">Auto (System)</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="setting-item">
+            <label for="font-size" class="setting-label">
+              Reading font size
+            </label>
+            <div class="setting-control">
+              <select id="font-size" class="font-select">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+          </div>
+        </section>
+        
+        <section class="settings-section">
+          <h2 class="section-title">Notifications</h2>
+          <div class="setting-item">
+            <div class="setting-label">
+              Push notifications
+              <span class="setting-description">Notifications are not yet available. Coming soon!</span>
+            </div>
+            <div class="setting-control">
+              <button 
+                class="notification-toggle"
+                disabled
+              >
+                Coming Soon
+              </button>
+            </div>
+          </div>
+          
+          <div class="setting-item" id="notification-frequency" style="display: none;">
+            <label for="frequency" class="setting-label">
+              Notification frequency
+            </label>
+            <div class="setting-control">
+              <select id="frequency" class="frequency-select">
+                <option value="immediate">Immediately</option>
+                <option value="daily" selected>Daily digest</option>
+                <option value="weekly">Weekly digest</option>
+              </select>
+            </div>
+          </div>
+        </section>
+        
+        
+        <section class="settings-section">
+          <h2 class="section-title">Data</h2>
+          <div class="setting-item">
+            <div class="setting-label">
+              Clear data
+              <span class="setting-description">Reset all settings and clear local data</span>
+            </div>
+            <div class="setting-control">
+              <button class="clear-btn">
+                Clear All Data
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  // Theme functionality
+  const themeSelect = document.getElementById('theme-toggle') as HTMLSelectElement;
+  const fontSelect = document.getElementById('font-size') as HTMLSelectElement;
+  
+  // Notification functionality
+  const pushToggle = document.getElementById('push-notifications') as HTMLButtonElement;
+  const frequencySection = document.getElementById('notification-frequency') as HTMLElement;
+  
+  // Load saved preferences
+  function loadPreferences() {
+    const savedTheme = localStorage.getItem('theme') || 'auto';
+    const savedFontSize = localStorage.getItem('fontSize') || 'medium';
+    const notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+    
+    if (themeSelect) themeSelect.value = savedTheme;
+    if (fontSelect) fontSelect.value = savedFontSize;
+    
+    if (pushToggle) {
+      pushToggle.dataset.enabled = notificationsEnabled.toString();
+      pushToggle.querySelector('.toggle-text')!.textContent = notificationsEnabled ? 'Enabled' : 'Enable';
+      if (notificationsEnabled && frequencySection) {
+        frequencySection.style.display = 'flex';
+      }
+      
+      // Show/hide test button based on notification state
+      const testBtn = document.getElementById('test-notification') as HTMLButtonElement;
+      if (testBtn && notificationsEnabled && Notification.permission === 'granted') {
+        testBtn.style.display = 'block';
+      }
+    }
+  }
+  
+  // Theme change handler
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      const theme = (e.target as HTMLSelectElement).value;
+      localStorage.setItem('theme', theme);
+      applyTheme(theme);
+    });
+  }
+  
+  // Font size change handler
+  if (fontSelect) {
+    fontSelect.addEventListener('change', (e) => {
+      const fontSize = (e.target as HTMLSelectElement).value;
+      localStorage.setItem('fontSize', fontSize);
+      applyFontSize(fontSize);
+    });
+  }
+  
+  // Push notification toggle
+  if (pushToggle) {
+    pushToggle.addEventListener('click', async () => {
+      const isEnabled = pushToggle.dataset.enabled === 'true';
+      
+      if (!isEnabled) {
+        // Request permission
+        if ('Notification' in window) {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            pushToggle.dataset.enabled = 'true';
+            pushToggle.querySelector('.toggle-text')!.textContent = 'Enabled';
+            localStorage.setItem('notificationsEnabled', 'true');
+            if (frequencySection) frequencySection.style.display = 'flex';
+            
+            // Show test button
+            const testBtn = document.getElementById('test-notification') as HTMLButtonElement;
+            if (testBtn) testBtn.style.display = 'block';
+          }
+        }
+      } else {
+        // Disable notifications
+        pushToggle.dataset.enabled = 'false';
+        pushToggle.querySelector('.toggle-text')!.textContent = 'Enable';
+        localStorage.setItem('notificationsEnabled', 'false');
+        if (frequencySection) frequencySection.style.display = 'none';
+        
+        // Hide test button
+        const testBtn = document.getElementById('test-notification') as HTMLButtonElement;
+        if (testBtn) testBtn.style.display = 'none';
+      }
+    });
+  }
+  
+  // Test notification functionality
+  const testNotificationBtn = document.getElementById('test-notification') as HTMLButtonElement;
+  if (testNotificationBtn) {
+    testNotificationBtn.addEventListener('click', () => {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        // Creative messages from service worker
+        const creativeMessages = [
+          "🐰 A new rabbit hole awaits your curiosity",
+          "✨ Fresh discovery published - dive deep into something fascinating",
+          "🔍 New content to explore - another beautiful distraction awaits",
+          "💫 Just published: something worth getting lost in",
+          "🌟 New post live - ready to fall down another rabbit hole?",
+          "📚 Fresh reading material for the curious mind",
+          "🎯 New discovery curated just for you",
+          "⚡ Something interesting just dropped - come explore"
+        ];
+        
+        const randomMessage = creativeMessages[Math.floor(Math.random() * creativeMessages.length)];
+        
+        new Notification('Test Notification - Rabbit Holes', {
+          body: randomMessage,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/badge-72x72.png',
+          tag: 'rabbit-holes-test'
+        });
+      }
+    });
+  }
+  
+  
+  
+  // Clear data
+  const clearBtn = document.querySelector('.clear-btn') as HTMLButtonElement;
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+        localStorage.clear();
+        location.reload();
+      }
+    });
+  }
+  
+  // Apply theme
+  function applyTheme(theme: string) {
+    if (theme === 'auto') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.body.className = prefersDark ? 'dark' : '';
+    } else {
+      document.body.className = theme === 'dark' ? 'dark' : '';
+    }
+  }
+  
+  // Apply font size
+  function applyFontSize(size: string) {
+    document.documentElement.style.setProperty('--base-font-size', 
+      size === 'small' ? '16px' : size === 'large' ? '20px' : '18px'
+    );
+  }
+  
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    loadPreferences();
+  });
+</script>
+
+<style>
+  .settings-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  
+  .settings-title {
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  body.dark .settings-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .settings-description {
+    font-size: 16px;
+    color: var(--text-secondary-light);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  
+  body.dark .settings-description {
+    color: var(--text-secondary-dark);
+  }
+  
+  .settings-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .settings-section {
+    margin-bottom: 48px;
+    padding: 32px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .settings-section:last-child {
+    border-bottom: none;
+  }
+  
+  body.dark .settings-section {
+    border-bottom-color: var(--border-dark);
+  }
+  
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--text-primary-light);
+    font-family: 'Work Sans', sans-serif;
+    border-bottom: 2px solid var(--accent-orange);
+    padding-bottom: 8px;
+    display: inline-block;
+  }
+  
+  body.dark .section-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 24px;
+  }
+  
+  .setting-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .setting-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary-light);
+    flex: 1;
+  }
+  
+  body.dark .setting-label {
+    color: var(--text-primary-dark);
+  }
+  
+  .setting-description {
+    display: block;
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    font-weight: 400;
+    margin-top: 4px;
+  }
+  
+  body.dark .setting-description {
+    color: var(--text-secondary-dark);
+  }
+  
+  .setting-control {
+    min-width: 140px;
+  }
+  
+  .theme-select,
+  .font-select,
+  .frequency-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-light);
+    color: var(--text-primary-light);
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  
+  body.dark .theme-select,
+  body.dark .font-select,
+  body.dark .frequency-select {
+    border-color: var(--border-dark);
+    background: var(--bg-dark);
+    color: var(--text-primary-dark);
+  }
+  
+  .notification-toggle,
+  .analytics-toggle {
+    background: var(--bg-light);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary-light);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    width: 100%;
+  }
+  
+  .notification-toggle[data-enabled="true"],
+  .analytics-toggle[data-enabled="true"] {
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
+    color: white;
+  }
+  
+  .notification-toggle:disabled {
+    background: var(--accent-light);
+    border-color: var(--border-light);
+    color: var(--text-tertiary-light);
+    cursor: not-allowed;
+  }
+  
+  body.dark .notification-toggle:disabled {
+    background: var(--accent-dark);
+    border-color: var(--border-dark);
+    color: var(--text-tertiary-dark);
+  }
+  
+  body.dark .notification-toggle,
+  body.dark .analytics-toggle {
+    background: var(--bg-dark);
+    border-color: var(--border-dark);
+    color: var(--text-primary-dark);
+  }
+  
+  .export-btn,
+  .clear-btn {
+    background: var(--bg-light);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary-light);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    width: 100%;
+  }
+  
+  .export-btn:hover {
+    background: var(--accent-light);
+  }
+  
+  .clear-btn {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+  }
+  
+  .clear-btn:hover {
+    background: #c82333;
+    border-color: #c82333;
+  }
+  
+  body.dark .export-btn {
+    background: var(--bg-dark);
+    border-color: var(--border-dark);
+    color: var(--text-primary-dark);
+  }
+  
+  body.dark .export-btn:hover {
+    background: var(--accent-dark);
+  }
+  
+  .notification-controls {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .test-notification-btn {
+    background: var(--accent-orange);
+    border: 1px solid var(--accent-orange);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    white-space: nowrap;
+    min-width: 50px;
+  }
+  
+  .test-notification-btn:hover {
+    background: var(--accent-orange-hover);
+    border-color: var(--accent-orange-hover);
+  }
+  
+  @media (max-width: 768px) {
+    .settings-title {
+      font-size: 28px;
+    }
+    
+    .settings-section {
+      padding: 24px;
+    }
+    
+    .setting-item {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    
+    .setting-control {
+      min-width: auto;
+    }
+  }
+</style>
