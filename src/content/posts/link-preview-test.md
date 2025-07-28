@@ -18,15 +18,34 @@ This is a test post to check how different types of links are handled and displa
 
 Here are some interesting articles from different platforms:
 
-**Substack Article:**
-[Against Truth - Sam Kriss](https://samkriss.substack.com/p/against-truth)
+**Substack Article - Inline Link:**
+Check out this piece: [Against Truth - Sam Kriss](https://samkriss.substack.com/p/against-truth) (inline, no preview)
 
-A philosophical exploration of truth in the modern world. This should show a rich preview with title, excerpt, and author information.
+**Manual Rich Preview (with predefined metadata):**
 
-**The Economist:**
-[Cigarettes, booze and petrol bankroll Europe's welfare empire](https://www.economist.com/europe/2025/07/24/cigarettes-booze-and-petrol-bankroll-europes-welfare-empire?utm_campaign=trueanthem&utm_medium=social&utm_source=linkedin)
+import LinkPreview from '../../components/LinkPreview.astro';
 
-An analysis of how sin taxes fund European social programs.
+<LinkPreview 
+  url="https://samkriss.substack.com/p/against-truth"
+  title="Against Truth"
+  description="A philosophical exploration of truth in the modern world, questioning our fundamental assumptions about reality and knowledge."
+  author="Sam Kriss"
+  siteName="Substack"
+/>
+
+**Automatic Rich Preview (fetches metadata at build time):**
+
+<LinkPreview 
+  url="https://www.economist.com/europe/2025/07/24/cigarettes-booze-and-petrol-bankroll-europes-welfare-empire"
+  autoFetch={true}
+/>
+
+**GitHub Auto-Fetch Example:**
+
+<LinkPreview 
+  url="https://github.com/withastro/astro"
+  autoFetch={true}
+/>
 
 ## Social Media Links
 

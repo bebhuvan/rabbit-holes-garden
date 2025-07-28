@@ -1,0 +1,242 @@
+---
+import { fetchLinkMetadata, getDomainMetadata, type LinkMetadata } from '../utils/linkPreview.ts';
+
+interface Props {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  favicon?: string;
+  author?: string;
+  publishDate?: string;
+  siteName?: string;
+  autoFetch?: boolean; // Whether to automatically fetch metadata
+}
+
+const { 
+  url, 
+  title, 
+  description, 
+  image, 
+  favicon, 
+  author, 
+  publishDate, 
+  siteName,
+  autoFetch = false 
+} = Astro.props;
+
+// Auto-fetch metadata if enabled and no manual data provided
+let metadata: LinkMetadata = { url };
+if (autoFetch && !title && !description) {
+  try {
+    metadata = await fetchLinkMetadata(url);
+  } catch (error) {
+    console.warn(`Failed to auto-fetch metadata for ${url}:`, error);
+  }
+}
+
+// Use domain metadata as fallback
+const domainMeta = getDomainMetadata(url);
+
+// Extract domain from URL for fallback
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace('www.', '');
+  } catch {
+    return 'External Link';
+  }
+}
+
+const domain = getDomain(url);
+const displayTitle = title || metadata.title || 'Link Preview';
+const displayDescription = description || metadata.description || `Visit ${domain}`;
+const displayImage = image || metadata.image;
+const displayFavicon = favicon || metadata.favicon || domainMeta.favicon;
+const displaySiteName = siteName || metadata.siteName || domainMeta.siteName || domain;
+const displayAuthor = author || metadata.author;
+const displayDate = publishDate || metadata.publishDate;
+---
+
+<div class="link-preview">
+  <a href={url} target="_blank" rel="noopener noreferrer" class="link-preview-card">
+    {displayImage && (
+      <div class="link-preview-image">
+        <img src={displayImage} alt={displayTitle} />
+      </div>
+    )}
+    
+    <div class="link-preview-content">
+      <div class="link-preview-header">
+        {displayFavicon && <img src={displayFavicon} alt="" class="link-preview-favicon" />}
+        <span class="link-preview-domain">{displaySiteName}</span>
+      </div>
+      
+      <h3 class="link-preview-title">{displayTitle}</h3>
+      
+      {displayDescription && (
+        <p class="link-preview-description">{displayDescription}</p>
+      )}
+      
+      {(displayAuthor || displayDate) && (
+        <div class="link-preview-meta">
+          {displayAuthor && <span class="link-preview-author">By {displayAuthor}</span>}
+          {displayDate && <span class="link-preview-date">{displayDate}</span>}
+        </div>
+      )}
+    </div>
+  </a>
+</div>
+
+<style>
+  .link-preview {
+    margin: 24px 0;
+    width: 100%;
+  }
+  
+  .link-preview-card {
+    display: flex;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    background: var(--bg-light);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  
+  .link-preview-card:hover {
+    border-color: var(--accent-orange);
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  body.dark .link-preview-card {
+    border-color: var(--border-dark);
+    background: var(--accent-dark);
+  }
+  
+  body.dark .link-preview-card:hover {
+    border-color: var(--accent-orange-dark);
+    box-shadow: 0 4px 16px rgba(251, 146, 60, 0.15);
+  }
+  
+  .link-preview-image {
+    width: 160px;
+    height: 120px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  
+  .link-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .link-preview-content {
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .link-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .link-preview-favicon {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+  }
+  
+  .link-preview-domain {
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  body.dark .link-preview-domain {
+    color: var(--text-tertiary-dark);
+  }
+  
+  .link-preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    color: var(--text-primary-light);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  body.dark .link-preview-title {
+    color: var(--text-primary-dark);
+  }
+  
+  .link-preview-description {
+    font-size: 14px;
+    color: var(--text-secondary-light);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  
+  body.dark .link-preview-description {
+    color: var(--text-secondary-dark);
+  }
+  
+  .link-preview-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-tertiary-light);
+  }
+  
+  body.dark .link-preview-meta {
+    color: var(--text-tertiary-dark);
+  }
+  
+  @media (max-width: 768px) {
+    .link-preview-card {
+      flex-direction: column;
+    }
+    
+    .link-preview-image {
+      width: 100%;
+      height: 140px;
+    }
+    
+    .link-preview-content {
+      padding: 16px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .link-preview {
+      margin: 20px 0;
+    }
+    
+    .link-preview-content {
+      padding: 14px;
+    }
+    
+    .link-preview-title {
+      font-size: 15px;
+    }
+    
+    .link-preview-description {
+      font-size: 13px;
+    }
+  }
+</style>
