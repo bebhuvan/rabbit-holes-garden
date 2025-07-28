@@ -44,8 +44,8 @@ body {
 
 @media (max-width: 480px) {
   body {
-    font-size: 16px;
-    line-height: 1.5;
+    font-size: 17px;
+    line-height: 1.6;
   }
 }
 
@@ -402,19 +402,30 @@ body.dark .preview-url {
 /* Small mobile optimizations */
 @media (max-width: 480px) {
   body {
-    font-size: 15px;
+    font-size: 17px;
   }
   
   .post-content {
-    font-size: 16px;
+    font-size: 18px;
+    line-height: 1.7;
+  }
+  
+  .post-content h2 {
+    font-size: 24px;
+    margin: 36px 0 20px 0;
+  }
+  
+  .post-content h3 {
+    font-size: 20px;
+    margin: 32px 0 16px 0;
   }
   
   .embed-container {
-    margin: 16px -20px; /* Account for container padding */
+    margin: 24px 0;
   }
   
   .gist-embed {
-    font-size: 12px;
+    font-size: 14px;
   }
 }
 
@@ -555,11 +566,11 @@ body.dark .pwa-hint-dismiss:hover {
   }
   
   .post-content {
-    font-size: 16px;
+    font-size: 17px;
   }
   
   .post-content h2 {
-    font-size: 20px;
+    font-size: 22px;
   }
   
   .post-content p:first-of-type::first-letter {
