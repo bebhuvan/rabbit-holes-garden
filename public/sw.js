@@ -2,6 +2,13 @@ const CACHE_NAME = 'rabbit-holes-v1';
 const STATIC_CACHE = 'rabbit-holes-static-v1';
 const DYNAMIC_CACHE = 'rabbit-holes-dynamic-v1';
 
+// Cache configuration
+const CACHE_CONFIG = {
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  maxEntries: 50, // Maximum number of entries in dynamic cache
+  networkTimeoutSeconds: 3 // Network timeout before serving from cache
+};
+
 // Files to cache immediately
 const STATIC_FILES = [
   '/',
@@ -57,6 +64,31 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Helper function to check if cache is expired
+function isCacheExpired(response) {
+  if (!response) return true;
+  
+  const fetchDate = response.headers.get('sw-fetched-on');
+  if (!fetchDate) return true;
+  
+  const cacheAge = Date.now() - new Date(fetchDate).getTime();
+  return cacheAge > CACHE_CONFIG.maxAge;
+}
+
+// Helper function to add timestamp to response
+function addTimestamp(response) {
+  const headers = new Headers(response.headers);
+  headers.append('sw-fetched-on', new Date().toISOString());
+  
+  return response.blob().then(body => {
+    return new Response(body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: headers
+    });
+  });
+}
+
 // Fetch event - serve from cache with network fallback
 self.addEventListener('fetch', event => {
   const { request } = event;
@@ -70,8 +102,25 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(request)
       .then(cachedResponse => {
-        if (cachedResponse) {
+        // Check if cache is expired
+        if (cachedResponse && !isCacheExpired(cachedResponse)) {
           console.log('Service Worker: Serving from cache', request.url);
+          
+          // Return cache immediately but fetch in background to update
+          event.waitUntil(
+            fetch(request)
+              .then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200) {
+                  return caches.open(DYNAMIC_CACHE).then(cache => {
+                    return addTimestamp(networkResponse.clone()).then(timestampedResponse => {
+                      cache.put(request, timestampedResponse);
+                    });
+                  });
+                }
+              })
+              .catch(() => {})
+          );
+          
           return cachedResponse;
         }
         
@@ -86,11 +135,23 @@ self.addEventListener('fetch', event => {
             // Clone response for caching
             const responseToCache = networkResponse.clone();
             
-            // Cache dynamic content
+            // Cache dynamic content with timestamp
             caches.open(DYNAMIC_CACHE)
               .then(cache => {
                 console.log('Service Worker: Caching dynamic content', request.url);
-                cache.put(request, responseToCache);
+                return addTimestamp(responseToCache).then(timestampedResponse => {
+                  cache.put(request, timestampedResponse);
+                  
+                  // Clean up old entries if cache is too large
+                  return cache.keys().then(keys => {
+                    if (keys.length > CACHE_CONFIG.maxEntries) {
+                      // Delete oldest entries
+                      const deleteCount = keys.length - CACHE_CONFIG.maxEntries;
+                      const promises = keys.slice(0, deleteCount).map(key => cache.delete(key));
+                      return Promise.all(promises);
+                    }
+                  });
+                });
               });
             
             return networkResponse;

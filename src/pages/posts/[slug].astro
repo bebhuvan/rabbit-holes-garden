@@ -568,3 +568,311 @@ const jsonLd = {
     }
   }
 </style>
+
+<!-- Automatic Link Previews -->
+<script>
+// Client-side automatic link preview system
+(function() {
+  'use strict';
+
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLinkPreviews);
+  } else {
+    initLinkPreviews();
+  }
+
+  function initLinkPreviews() {
+    console.log('🔌 Initializing automatic link previews...');
+    
+    // Find all paragraphs in post content
+    const postContent = document.querySelector('.post-content');
+    if (!postContent) return;
+
+    const paragraphs = postContent.querySelectorAll('p');
+    let convertedCount = 0;
+
+    paragraphs.forEach(paragraph => {
+      // Check if paragraph contains only a single link where text = href
+      const links = paragraph.querySelectorAll('a');
+      if (links.length === 1 && paragraph.textContent.trim() === links[0].href) {
+        const link = links[0];
+        const url = link.href;
+        
+        console.log('✅ Converting standalone link:', url);
+        convertedCount++;
+        
+        // Replace paragraph with preview card
+        const previewCard = createPreviewCard(url);
+        paragraph.parentNode.replaceChild(previewCard, paragraph);
+        
+        // Fetch metadata asynchronously and update with timeout
+        Promise.race([
+          fetchMetadata(url),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]).then(metadata => {
+          updatePreviewCard(previewCard, metadata);
+        }).catch(error => {
+          console.warn('Failed to fetch metadata for:', url, error);
+          // Use enhanced fallback if fetch fails
+          const fallbackMetadata = getFallbackMetadata(url);
+          updatePreviewCard(previewCard, fallbackMetadata);
+        });
+      }
+    });
+
+    console.log(`🚀 Converted ${convertedCount} links to previews`);
+  }
+
+  function createPreviewCard(url) {
+    // Show enhanced fallback immediately
+    const fallback = getFallbackMetadata(url);
+    
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'link-preview';
+    previewDiv.innerHTML = `
+      <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="link-preview-card">
+        <div class="link-preview-content">
+          <div class="link-preview-header">
+            <span class="link-preview-domain">${escapeHtml(fallback.siteName)}</span>
+          </div>
+          <h3 class="link-preview-title">${escapeHtml(fallback.title)}</h3>
+          <p class="link-preview-description">${escapeHtml(fallback.description)}</p>
+        </div>
+      </a>
+    `;
+    
+    return previewDiv;
+  }
+
+  function getFallbackMetadata(url) {
+    const domain = getDomain(url);
+    
+    const knownSites = {
+      'github.com': { 
+        siteName: 'GitHub', 
+        favicon: 'https://github.com/favicon.ico',
+        getTitle: (url) => {
+          const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
+          return match ? `${match[1]} - GitHub Repository` : 'GitHub Repository';
+        }
+      },
+      'stackoverflow.com': { 
+        siteName: 'Stack Overflow', 
+        favicon: 'https://stackoverflow.com/favicon.ico',
+        getTitle: () => 'Stack Overflow Question'
+      },
+      'substack.com': { 
+        siteName: 'Substack', 
+        favicon: 'https://substack.com/favicon.ico',
+        getTitle: () => 'Substack Article'
+      },
+      'economist.com': { 
+        siteName: 'The Economist', 
+        favicon: 'https://www.economist.com/favicon.ico',
+        getTitle: () => 'The Economist Article'
+      },
+      'dev.to': { 
+        siteName: 'DEV Community', 
+        favicon: 'https://dev.to/favicon.ico',
+        getTitle: () => 'DEV Community Post'
+      },
+      'medium.com': { 
+        siteName: 'Medium', 
+        favicon: 'https://medium.com/favicon.ico',
+        getTitle: () => 'Medium Article'
+      },
+      'techcrunch.com': { 
+        siteName: 'TechCrunch', 
+        favicon: 'https://techcrunch.com/favicon.ico',
+        getTitle: () => 'TechCrunch Article'
+      }
+    };
+
+    const siteInfo = Object.entries(knownSites).find(([key]) => domain.includes(key));
+    if (siteInfo) {
+      const [, info] = siteInfo;
+      return {
+        title: info.getTitle(url),
+        description: `Read this article on ${info.siteName}`,
+        siteName: info.siteName,
+        favicon: info.favicon
+      };
+    }
+    
+    return {
+      title: `${domain} - External Link`,
+      description: `Visit this content on ${domain}`,
+      siteName: domain
+    };
+  }
+
+  async function fetchMetadata(url) {
+    try {
+      const domain = getDomain(url);
+      
+      // Try to fetch actual metadata using a CORS proxy with timeout
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 2000); // 2 second timeout
+        
+        const response = await fetch(proxyUrl, { signal: controller.signal });
+        const data = await response.json();
+        
+        if (data.contents) {
+          const html = data.contents;
+          const metadata = extractMetadataFromHtml(html, url);
+          if (metadata.title && metadata.title !== 'Link Preview') {
+            return metadata;
+          }
+        }
+      } catch (proxyError) {
+        console.warn('CORS proxy failed, using fallback metadata');
+      }
+      
+      // Fallback to enhanced domain-based previews
+      const knownSites = {
+        'github.com': { 
+          siteName: 'GitHub', 
+          favicon: 'https://github.com/favicon.ico',
+          getTitle: (url) => {
+            const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
+            return match ? `${match[1]} - GitHub Repository` : 'GitHub Repository';
+          }
+        },
+        'stackoverflow.com': { 
+          siteName: 'Stack Overflow', 
+          favicon: 'https://stackoverflow.com/favicon.ico',
+          getTitle: () => 'Stack Overflow Question'
+        },
+        'substack.com': { 
+          siteName: 'Substack', 
+          favicon: 'https://substack.com/favicon.ico',
+          getTitle: () => 'Substack Article'
+        },
+        'economist.com': { 
+          siteName: 'The Economist', 
+          favicon: 'https://www.economist.com/favicon.ico',
+          getTitle: () => 'The Economist Article'
+        },
+        'dev.to': { 
+          siteName: 'DEV Community', 
+          favicon: 'https://dev.to/favicon.ico',
+          getTitle: () => 'DEV Community Post'
+        },
+        'medium.com': { 
+          siteName: 'Medium', 
+          favicon: 'https://medium.com/favicon.ico',
+          getTitle: () => 'Medium Article'
+        },
+        'techcrunch.com': { 
+          siteName: 'TechCrunch', 
+          favicon: 'https://techcrunch.com/favicon.ico',
+          getTitle: () => 'TechCrunch Article'
+        }
+      };
+
+      const siteInfo = Object.entries(knownSites).find(([key]) => domain.includes(key));
+      if (siteInfo) {
+        const [, info] = siteInfo;
+        return {
+          title: info.getTitle(url),
+          description: `Read this article on ${info.siteName}`,
+          siteName: info.siteName,
+          favicon: info.favicon
+        };
+      }
+      
+      return {
+        title: `${domain} - External Link`,
+        description: `Visit this content on ${domain}`,
+        siteName: domain
+      };
+    } catch (error) {
+      console.warn('Error fetching metadata:', error);
+      return {
+        title: 'External Link',
+        description: 'Click to visit this link',
+        siteName: getDomain(url)
+      };
+    }
+  }
+
+  function extractMetadataFromHtml(html, url) {
+    const metadata = {
+      title: extractFromHtml(html, [
+        /<meta\s+property="og:title"\s+content="([^"]*)"/i,
+        /<meta\s+name="title"\s+content="([^"]*)"/i,
+        /<title[^>]*>([^<]+)<\/title>/i
+      ]),
+      description: extractFromHtml(html, [
+        /<meta\s+property="og:description"\s+content="([^"]*)"/i,
+        /<meta\s+name="description"\s+content="([^"]*)"/i
+      ]),
+      image: extractFromHtml(html, [
+        /<meta\s+property="og:image"\s+content="([^"]*)"/i,
+        /<meta\s+name="twitter:image"\s+content="([^"]*)"/i
+      ]),
+      siteName: extractFromHtml(html, [
+        /<meta\s+property="og:site_name"\s+content="([^"]*)"/i
+      ])
+    };
+
+    return {
+      ...metadata,
+      title: metadata.title || getDomain(url),
+      description: metadata.description || `Visit this content on ${getDomain(url)}`
+    };
+  }
+
+  function extractFromHtml(html, patterns) {
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match && match[1] && match[1].trim()) {
+        return match[1].trim();
+      }
+    }
+    return null;
+  }
+
+  function updatePreviewCard(previewDiv, metadata) {
+    const domain = getDomain(previewDiv.querySelector('a').href);
+    const title = metadata.title || 'Link Preview';
+    const description = metadata.description || `Visit ${domain}`;
+    const siteName = metadata.siteName || domain;
+    
+    const titleEl = previewDiv.querySelector('.link-preview-title');
+    const descEl = previewDiv.querySelector('.link-preview-description');
+    const domainEl = previewDiv.querySelector('.link-preview-domain');
+    
+    if (titleEl) titleEl.textContent = title;
+    if (descEl) descEl.textContent = description;
+    if (domainEl) domainEl.textContent = siteName;
+    
+    // Add favicon if available
+    if (metadata.favicon) {
+      const headerDiv = previewDiv.querySelector('.link-preview-header');
+      const faviconImg = document.createElement('img');
+      faviconImg.src = metadata.favicon;
+      faviconImg.alt = '';
+      faviconImg.className = 'link-preview-favicon';
+      headerDiv.insertBefore(faviconImg, headerDiv.firstChild);
+    }
+  }
+
+  function getDomain(url) {
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return 'External Link';
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+})();
+</script>

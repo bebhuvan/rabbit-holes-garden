@@ -11,6 +11,7 @@ const metadataCache = new Map<string, LinkMetadata>();
 
 export const remarkLinkPreview: Plugin<[], Root> = () => {
   return async (tree: Root) => {
+    console.log('🔌 remarkLinkPreview plugin running...');
     const transformations: Promise<void>[] = [];
 
     visit(tree, 'paragraph', (node: Paragraph, index: number, parent) => {
@@ -22,7 +23,10 @@ export const remarkLinkPreview: Plugin<[], Root> = () => {
         const textNode = node.children[0] as Text;
         const text = textNode.value.trim();
         
+        console.log('🔍 Checking text:', text);
+        
         if (URL_REGEX.test(text)) {
+          console.log('✅ Found standalone URL:', text);
           // This is a standalone URL - convert to link preview
           const transformation = convertUrlToPreview(text, node, index, parent);
           transformations.push(transformation);
@@ -30,8 +34,10 @@ export const remarkLinkPreview: Plugin<[], Root> = () => {
       }
     });
 
+    console.log(`🚀 Processing ${transformations.length} URL transformations`);
     // Wait for all metadata fetching to complete
     await Promise.all(transformations);
+    console.log('✅ remarkLinkPreview plugin complete');
   };
 };
 
