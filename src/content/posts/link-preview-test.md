@@ -21,31 +21,53 @@ Here are some interesting articles from different platforms:
 **Substack Article - Inline Link:**
 Check out this piece: [Against Truth - Sam Kriss](https://samkriss.substack.com/p/against-truth) (inline, no preview)
 
-**Manual Rich Preview (with predefined metadata):**
+**Manual Rich Preview (using HTML):**
 
-import LinkPreview from '../../components/LinkPreview.astro';
+<div class="link-preview">
+  <a href="https://samkriss.substack.com/p/against-truth" target="_blank" rel="noopener noreferrer" class="link-preview-card">
+    <div class="link-preview-content">
+      <div class="link-preview-header">
+        <img src="https://substack.com/favicon.ico" alt="" class="link-preview-favicon" />
+        <span class="link-preview-domain">Substack</span>
+      </div>
+      <h3 class="link-preview-title">Against Truth</h3>
+      <p class="link-preview-description">A philosophical exploration of truth in the modern world, questioning our fundamental assumptions about reality and knowledge.</p>
+      <div class="link-preview-meta">
+        <span class="link-preview-author">By Sam Kriss</span>
+      </div>
+    </div>
+  </a>
+</div>
 
-<LinkPreview 
-  url="https://samkriss.substack.com/p/against-truth"
-  title="Against Truth"
-  description="A philosophical exploration of truth in the modern world, questioning our fundamental assumptions about reality and knowledge."
-  author="Sam Kriss"
-  siteName="Substack"
-/>
+**The Economist Preview:**
 
-**Automatic Rich Preview (fetches metadata at build time):**
+<div class="link-preview">
+  <a href="https://www.economist.com/europe/2025/07/24/cigarettes-booze-and-petrol-bankroll-europes-welfare-empire" target="_blank" rel="noopener noreferrer" class="link-preview-card">
+    <div class="link-preview-content">
+      <div class="link-preview-header">
+        <img src="https://www.economist.com/favicon.ico" alt="" class="link-preview-favicon" />
+        <span class="link-preview-domain">The Economist</span>
+      </div>
+      <h3 class="link-preview-title">Cigarettes, booze and petrol bankroll Europe's welfare empire</h3>
+      <p class="link-preview-description">An analysis of how sin taxes fund European social programs and the implications for public policy.</p>
+    </div>
+  </a>
+</div>
 
-<LinkPreview 
-  url="https://www.economist.com/europe/2025/07/24/cigarettes-booze-and-petrol-bankroll-europes-welfare-empire"
-  autoFetch={true}
-/>
+**GitHub Repository Preview:**
 
-**GitHub Auto-Fetch Example:**
-
-<LinkPreview 
-  url="https://github.com/withastro/astro"
-  autoFetch={true}
-/>
+<div class="link-preview">
+  <a href="https://github.com/withastro/astro" target="_blank" rel="noopener noreferrer" class="link-preview-card">
+    <div class="link-preview-content">
+      <div class="link-preview-header">
+        <img src="https://github.com/favicon.ico" alt="" class="link-preview-favicon" />
+        <span class="link-preview-domain">GitHub</span>
+      </div>
+      <h3 class="link-preview-title">Astro Web Framework</h3>
+      <p class="link-preview-description">Build fast websites with less client-side JavaScript. The modern web framework for content-focused websites.</p>
+    </div>
+  </a>
+</div>
 
 ## Social Media Links
 
