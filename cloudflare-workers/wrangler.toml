@@ -3,8 +3,8 @@ main = "ai-publisher.js"
 compatibility_date = "2023-05-18"
 
 [vars]
-# For local development - set a dummy key
-OPENAI_API_KEY = "sk-dummy-key-for-local-testing"
+# For local development - keys should be set as environment variables
+# OPENAI_API_KEY = "set-this-as-environment-variable"
 
 [env.production]
 name = "rabbit-holes-ai-publisher"
